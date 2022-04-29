@@ -7,8 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"sort"
@@ -40,9 +38,13 @@ const (
 	CommentsNotifyNever            = "never"
 	CommentsNotifyRoot             = "root"
 	CommentsNotifyAny              = "any"
+	CommentsNotifyCRT              = "crt"
 	FirstNameNotifyProp            = "first_name"
 	AutoResponderActiveNotifyProp  = "auto_responder_active"
 	AutoResponderMessageNotifyProp = "auto_responder_message"
+	DesktopThreadsNotifyProp       = "desktop_threads"
+	PushThreadsNotifyProp          = "push_threads"
+	EmailThreadsNotifyProp         = "email_threads"
 
 	DefaultLocale        = "en"
 	UserAuthServiceEmail = "email"
@@ -58,6 +60,7 @@ const (
 	UserPasswordMaxLength = 72
 	UserLocaleMaxLength   = 5
 	UserTimezoneMaxRunes  = 256
+	UserRolesMaxLength    = 256
 )
 
 //msgp:tuple User
@@ -92,13 +95,13 @@ type User struct {
 	MfaActive              bool      `json:"mfa_active,omitempty"`
 	MfaSecret              string    `json:"mfa_secret,omitempty"`
 	RemoteId               *string   `json:"remote_id,omitempty"`
-	LastActivityAt         int64     `db:"-" json:"last_activity_at,omitempty"`
-	IsBot                  bool      `db:"-" json:"is_bot,omitempty"`
-	BotDescription         string    `db:"-" json:"bot_description,omitempty"`
-	BotLastIconUpdate      int64     `db:"-" json:"bot_last_icon_update,omitempty"`
-	TermsOfServiceId       string    `db:"-" json:"terms_of_service_id,omitempty"`
-	TermsOfServiceCreateAt int64     `db:"-" json:"terms_of_service_create_at,omitempty"`
-	DisableWelcomeEmail    bool      `db:"-" json:"disable_welcome_email"`
+	LastActivityAt         int64     `json:"last_activity_at,omitempty"`
+	IsBot                  bool      `json:"is_bot,omitempty"`
+	BotDescription         string    `json:"bot_description,omitempty"`
+	BotLastIconUpdate      int64     `json:"bot_last_icon_update,omitempty"`
+	TermsOfServiceId       string    `json:"terms_of_service_id,omitempty"`
+	TermsOfServiceCreateAt int64     `json:"terms_of_service_create_at,omitempty"`
+	DisableWelcomeEmail    bool      `json:"disable_welcome_email"`
 }
 
 //msgp UserMap
@@ -259,7 +262,6 @@ func (u *User) DeepCopy() *User {
 // IsValid validates the user and returns an error if it isn't configured
 // correctly.
 func (u *User) IsValid() *AppError {
-
 	if !IsValidId(u.Id) {
 		return InvalidUserError("id", "")
 	}
@@ -328,6 +330,11 @@ func (u *User) IsValid() *AppError {
 		} else if utf8.RuneCount(tzJSON) > UserTimezoneMaxRunes {
 			return InvalidUserError("timezone_limit", u.Id)
 		}
+	}
+
+	if len(u.Roles) > UserRolesMaxLength {
+		return NewAppError("User.IsValid", "model.user.is_valid.roles_limit.app_error",
+			map[string]interface{}{"Limit": UserRolesMaxLength}, "user_id="+u.Id, http.StatusBadRequest)
 	}
 
 	return nil
@@ -402,6 +409,23 @@ func (u *User) PreSave() {
 	}
 }
 
+// The following are some GraphQL methods necessary to return the
+// data in float64 type. The spec doesn't support 64 bit integers,
+// so we have to pass the data in float64. The _ at the end is
+// a hack to keep the attribute name same in GraphQL schema.
+
+func (u *User) CreateAt_() float64 {
+	return float64(u.CreateAt)
+}
+
+func (u *User) DeleteAt_() float64 {
+	return float64(u.DeleteAt)
+}
+
+func (u *User) LastPictureUpdateAt() float64 {
+	return float64(u.LastPictureUpdate)
+}
+
 // PreUpdate should be run before updating the user in the db.
 func (u *User) PreUpdate() {
 	u.Username = SanitizeUnicode(u.Username)
@@ -449,6 +473,9 @@ func (u *User) SetDefaultNotifications() {
 	u.NotifyProps[PushStatusNotifyProp] = StatusAway
 	u.NotifyProps[CommentsNotifyProp] = CommentsNotifyNever
 	u.NotifyProps[FirstNameNotifyProp] = "false"
+	u.NotifyProps[DesktopThreadsNotifyProp] = UserNotifyAll
+	u.NotifyProps[EmailThreadsNotifyProp] = UserNotifyAll
+	u.NotifyProps[PushThreadsNotifyProp] = UserNotifyAll
 }
 
 func (u *User) UpdateMentionKeysFromUsername(oldUsername string) {
@@ -527,22 +554,6 @@ func (u *User) Patch(patch *UserPatch) {
 	}
 }
 
-// ToJson convert a User to a json string
-func (u *User) ToJson() string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
-func (u *UserPatch) ToJson() string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
-func (u *UserAuth) ToJson() string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
 // Generate a valid strong etag so the browser can cache the results
 func (u *User) Etag(showFullName, showEmail bool) string {
 	return Etag(u.Id, u.UpdateAt, u.TermsOfServiceId, u.TermsOfServiceCreateAt, showFullName, showEmail, u.BotLastIconUpdate)
@@ -617,9 +628,32 @@ func (u *User) AddNotifyProp(key string, value string) {
 	u.NotifyProps[key] = value
 }
 
-func (u *User) SetCustomStatus(cs *CustomStatus) {
+func (u *User) SetCustomStatus(cs *CustomStatus) error {
 	u.MakeNonNil()
-	u.Props[UserPropsKeyCustomStatus] = cs.ToJson()
+	statusJSON, jsonErr := json.Marshal(cs)
+	if jsonErr != nil {
+		return jsonErr
+	}
+	u.Props[UserPropsKeyCustomStatus] = string(statusJSON)
+	return nil
+}
+
+func (u *User) GetCustomStatus() *CustomStatus {
+	var o *CustomStatus
+
+	data := u.Props[UserPropsKeyCustomStatus]
+	_ = json.Unmarshal([]byte(data), &o)
+
+	return o
+}
+
+func (u *User) CustomStatus() *CustomStatus {
+	var o *CustomStatus
+
+	data := u.Props[UserPropsKeyCustomStatus]
+	_ = json.Unmarshal([]byte(data), &o)
+
+	return o
 }
 
 func (u *User) ClearCustomStatus() {
@@ -695,7 +729,7 @@ func IsValidUserRoles(userRoles string) bool {
 	return true
 }
 
-// Make sure you acually want to use this function. In context.go there are functions to check permissions
+// Make sure you actually want to use this function. In context.go there are functions to check permissions
 // This function should not be used to check permissions.
 func (u *User) IsGuest() bool {
 	return IsInRole(u.Roles, SystemGuestRoleId)
@@ -705,13 +739,13 @@ func (u *User) IsSystemAdmin() bool {
 	return IsInRole(u.Roles, SystemAdminRoleId)
 }
 
-// Make sure you acually want to use this function. In context.go there are functions to check permissions
+// Make sure you actually want to use this function. In context.go there are functions to check permissions
 // This function should not be used to check permissions.
 func (u *User) IsInRole(inRole string) bool {
 	return IsInRole(u.Roles, inRole)
 }
 
-// Make sure you acually want to use this function. In context.go there are functions to check permissions
+// Make sure you actually want to use this function. In context.go there are functions to check permissions
 // This function should not be used to check permissions.
 func IsInRole(userRoles string, inRole string) bool {
 	roles := strings.Split(userRoles, " ")
@@ -801,47 +835,6 @@ func (u *UserPatch) SetField(fieldName string, fieldValue string) {
 	case "Username":
 		u.Username = &fieldValue
 	}
-}
-
-// UserFromJson will decode the input and return a User
-func UserFromJson(data io.Reader) *User {
-	var user *User
-	json.NewDecoder(data).Decode(&user)
-	return user
-}
-
-func UserPatchFromJson(data io.Reader) *UserPatch {
-	var user *UserPatch
-	json.NewDecoder(data).Decode(&user)
-	return user
-}
-
-func UserAuthFromJson(data io.Reader) *UserAuth {
-	var user *UserAuth
-	json.NewDecoder(data).Decode(&user)
-	return user
-}
-
-func UserMapToJson(u map[string]*User) string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
-func UserMapFromJson(data io.Reader) map[string]*User {
-	var users map[string]*User
-	json.NewDecoder(data).Decode(&users)
-	return users
-}
-
-func UserListToJson(u []*User) string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
-func UserListFromJson(data io.Reader) []*User {
-	var users []*User
-	json.NewDecoder(data).Decode(&users)
-	return users
 }
 
 // HashPassword generates a hash using the bcrypt.GenerateFromPassword
@@ -956,11 +949,4 @@ func (u *UserWithGroups) GetGroupIDs() []string {
 type UsersWithGroupsAndCount struct {
 	Users []*UserWithGroups `json:"users"`
 	Count int64             `json:"total_count"`
-}
-
-func UsersWithGroupsAndCountFromJson(data io.Reader) *UsersWithGroupsAndCount {
-	uwg := &UsersWithGroupsAndCount{}
-	bodyBytes, _ := ioutil.ReadAll(data)
-	json.Unmarshal(bodyBytes, uwg)
-	return uwg
 }

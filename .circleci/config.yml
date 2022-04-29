@@ -9,7 +9,7 @@ executors:
     working_directory: ~/mattermost/
     resource_class: xlarge
     machine:
-      image: "ubuntu-1604:201903-01"
+      image: "ubuntu-2004:202201-02"
     environment:
       COMPOSE_PROJECT_NAME: "circleci"
 
@@ -19,6 +19,7 @@ jobs:
     docker:
       - image: mattermost/mattermost-build-webapp:20210524_node-16
     resource_class: xlarge
+    # Use `--retry-all-errors` instead of `until` after curl version >= 7.71.0; `retry` will not work, since it only retries on transient errors, 403 is not one of them.
     steps:
       - checkout
       - run: |
@@ -29,10 +30,25 @@ jobs:
           export WEBAPP_GIT_COMMIT=$(git rev-parse HEAD)
           echo "$WEBAPP_GIT_COMMIT"
 
-          trap 'npm ci && make build' ERR
-          curl -f -o ./dist.tar.gz https://pr-builds.mattermost.com/mattermost-webapp/commit/${WEBAPP_GIT_COMMIT}/mattermost-webapp.tar.gz
-          mkdir ./dist && tar -xvf ./dist.tar.gz -C ./dist --strip-components=1
-          trap - ERR
+          FILE_DIST=dist.tar.gz
+          curl --version
+
+          runtime="2 minute"
+          endtime=$(date -ud "$runtime" +%s)
+          while [[ $(date -u +%s) -le $endtime ]]; do
+              if curl --max-time 30 -f -o $FILE_DIST https://pr-builds.mattermost.com/mattermost-webapp/commit/$WEBAPP_GIT_COMMIT/mattermost-webapp.tar.gz; then
+                break
+              fi
+              echo "Waiting for webapp git commit $WEBAPP_GIT_COMMIT with sleep 5: `date +%H:%M:%S`"
+              sleep 5
+          done
+          ls -al
+          if tar -tzf $FILE_DIST >/dev/null; then
+            mkdir dist && tar -xvf $FILE_DIST -C dist --strip-components=1
+          else
+            npm ci && make build
+          fi
+          cd -
       - persist_to_workspace:
           root: ~/mattermost
           paths:
@@ -107,7 +123,7 @@ jobs:
 
   check-app-layers:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: mattermost/mattermost-build-server:20220415_golang-1.18.1
     working_directory: ~/mattermost
     steps:
       - attach_workspace:
@@ -120,7 +136,7 @@ jobs:
 
   check-store-layers:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: mattermost/mattermost-build-server:20220415_golang-1.18.1
     working_directory: ~/mattermost
     steps:
       - attach_workspace:
@@ -133,7 +149,7 @@ jobs:
 
   check-mocks:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: mattermost/mattermost-build-server:20220415_golang-1.18.1
     working_directory: ~/mattermost
     steps:
       - attach_workspace:
@@ -144,26 +160,39 @@ jobs:
             make einterfaces-mocks store-mocks
             if [[ -n $(git status --porcelain) ]]; then echo "Please update the mocks using `make einterfaces-mocks store-mocks`"; exit 1; fi
 
-  check-migrations:
+  check-email-templates:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: cimg/go:1.17-node
     working_directory: ~/mattermost
     steps:
       - attach_workspace:
           at: ~/mattermost/
       - run:
           command: |
-            export GOBIN=${PWD}/mattermost-server/bin
             cd mattermost-server
-            export PATH=$PATH:$GOBIN
-            make migrations-bindata
-            if [[ -n $(git status --porcelain) ]]; then echo "Please update the migration bindata using `make migrations-bindata`"; exit 1; fi
+            sudo npm install -g mjml@4.9.0
+            make build-templates
+            if [[ -n $(git status --porcelain) ]]; then echo "Please update the email templates using `make build-templates`"; exit 1; fi
 
-  # Dedicate job for golangci-lint it does not need anything only the server code for that
+  check-gen-serialized:
+    docker:
+      - image: cimg/go:1.17
+    working_directory: ~/mattermost
+    steps:
+      - attach_workspace:
+          at: ~/mattermost/
+      - run:
+          command: |
+            cd mattermost-server
+            make gen-serialized
+            if [[ -n $(git status --porcelain) ]]; then echo "Please update the serialized files using 'make gen-serialized'"; exit 1; fi
+
+  # Dedicated job for golangci-lint it does not need anything only the server code for that
   # and to make more clear when the job fails
   check-golangci-lint:
     docker:
-      - image: golangci/golangci-lint:v1.39.0
+      # Keep the version in sync with the command in Makefile
+      - image: golangci/golangci-lint:v1.45.2
     steps:
       - checkout
       - run:
@@ -172,16 +201,14 @@ jobs:
   # Dedicate job for mattermost-vet to make more clear when the job fails
   check-mattermost-vet:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: mattermost/mattermost-build-server:20220415_golang-1.18.1
     working_directory: ~/mattermost
     steps:
       - attach_workspace:
           at: ~/mattermost/
       - run:
           command: |
-            echo "Installing mattermost-govet"
             export GOBIN=${PWD}/mattermost-server/bin
-            GO111MODULE=off go get -u github.com/mattermost/mattermost-govet
             export PATH=$PATH:$GOBIN
             cd mattermost-server
             make config-reset
@@ -223,7 +250,7 @@ jobs:
 
   build:
     docker:
-      - image: mattermost/mattermost-build-server:20210720_golang-1.16.6
+      - image: mattermost/mattermost-build-server:20220415_golang-1.18.1
     resource_class: xlarge
     working_directory: ~/mattermost
     steps:
@@ -239,6 +266,10 @@ jobs:
           path: ~/mattermost/mattermost-server/dist/mattermost-team-linux-amd64.tar.gz
       - store_artifacts:
           path: ~/mattermost/mattermost-server/dist/mattermost-team-osx-amd64.tar.gz
+      - store_artifacts:
+          path: ~/mattermost/mattermost-server/dist/mattermost-team-linux-arm64.tar.gz
+      - store_artifacts:
+          path: ~/mattermost/mattermost-server/dist/mattermost-team-osx-arm64.tar.gz
       - store_artifacts:
           path: ~/mattermost/mattermost-server/dist/mattermost-team-windows-amd64.zip
       - persist_to_workspace:
@@ -272,13 +303,12 @@ jobs:
       - run:
           name: Wait for docker compose
           command: |
-            sleep 5
+            until docker network inspect circleci_mm-test; do echo "Waiting for Docker Compose Network..."; sleep 1; done;
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
       - run:
           name: Run Tests
           command: |
-            ulimit -n 8096
             mkdir -p mattermost-server/client/plugins
             cd mattermost-server/build
             docker run -it --net circleci_mm-test \
@@ -287,7 +317,7 @@ jobs:
               --env MM_SQLSETTINGS_DRIVERNAME=<<parameters.dbdriver>> \
               -v ~/mattermost:/mattermost \
               -w /mattermost/mattermost-server \
-              mattermost/mattermost-build-server:20210720_golang-1.16.6 \
+              mattermost/mattermost-build-server:20220415_golang-1.18.1 \
               bash -c "ulimit -n 8096; make test-server<< parameters.racemode >> BUILD_NUMBER=$CIRCLE_BRANCH-$CIRCLE_PREVIOUS_BUILD_NUM TESTFLAGS= TESTFLAGSEE=" \
               bash -c scripts/diff-email-templates.sh
           no_output_timeout: 2h
@@ -333,36 +363,27 @@ jobs:
       - run:
           name: Wait for docker compose
           command: |
-            sleep 5
+            until docker network inspect circleci_mm-test; do echo "Waiting for Docker Compose Network..."; sleep 1; done;
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
       - run:
           name: Postgres schema migration validation
           command: |
             cd mattermost-server/build
-            ulimit -n 8096
             mkdir -p mattermost-server/client/plugins
             echo "Creating databases"
             docker-compose --no-ansi exec -T postgres sh -c 'exec echo "CREATE DATABASE migrated; CREATE DATABASE latest;" | exec psql -U mmuser mattermost_test'
-            echo "Importing postgres dump from version 5.0"
-            docker-compose --no-ansi exec -T postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-5.0.sql
+            echo "Importing postgres dump from version 6.0.0"
+            docker-compose --no-ansi exec -T postgres psql -U mmuser -d migrated < ../scripts/mattermost-postgresql-6.0.0.sql
+            docker-compose --no-ansi exec -T postgres psql -U mmuser -d migrated -c "INSERT INTO Systems (Name, Value) VALUES ('Version', '6.0.0')"
             docker run -it --net circleci_mm-test \
               --env-file="dotenv/test-schema-validation.env" \
               --env MM_SQLSETTINGS_DATASOURCE="postgres://mmuser:mostest@postgres:5432/migrated?sslmode=disable&connect_timeout=10" \
               --env MM_SQLSETTINGS_DRIVERNAME=postgres \
               -v ~/mattermost:/mattermost \
               -w /mattermost/mattermost-server \
-              mattermost/mattermost-build-server:20210720_golang-1.16.6 \
-              bash -c "ulimit -n 8096; make ARGS='version' run-cli && make MM_SQLSETTINGS_DATASOURCE='postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10' ARGS='version' run-cli"
-
-            echo "Ignoring known mismatch: ChannelMembers.MentionCountRoot"
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE ChannelMembers DROP COLUMN MentionCountRoot;" | exec psql -U mmuser -d migrated'
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE ChannelMembers DROP COLUMN MentionCountRoot;" | exec psql -U mmuser -d latest'
-            echo "Ignoring known mismatch: ChannelMembers.MsgCountRoot and Channels.TotalMsgCountRoot"
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE ChannelMembers DROP COLUMN MsgCountRoot;" | exec psql -U mmuser -d migrated'
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE ChannelMembers DROP COLUMN MsgCountRoot;" | exec psql -U mmuser -d latest'
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE Channels DROP COLUMN TotalMsgCountRoot;" | exec psql -U mmuser -d migrated'
-            docker-compose --no-ansi exec -T postgres sh -c 'exec echo "ALTER TABLE Channels DROP COLUMN TotalMsgCountRoot;" | exec psql -U mmuser -d latest'
+              mattermost/mattermost-build-server:20220415_golang-1.18.1 \
+              bash -c "ulimit -n 8096; make ARGS='db migrate' run-cli && make MM_SQLSETTINGS_DATASOURCE='postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10' ARGS='db migrate' run-cli"
 
             echo "Generating dump"
             docker-compose --no-ansi exec -T postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql
@@ -377,12 +398,12 @@ jobs:
           name: MySQL schema migration validation
           command: |
             cd mattermost-server/build
-            ulimit -n 8096
             mkdir -p mattermost-server/client/plugins
             echo "Creating databases"
             docker-compose --no-ansi exec -T mysql mysql -uroot -pmostest -e "CREATE DATABASE migrated; CREATE DATABASE latest; GRANT ALL PRIVILEGES ON migrated.* TO mmuser; GRANT ALL PRIVILEGES ON latest.* TO mmuser"
-            echo "Importing mysql dump from version 5.0"
-            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest < ../scripts/mattermost-mysql-5.0.sql
+            echo "Importing mysql dump from version 6.0.0"
+            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest < ../scripts/mattermost-mysql-6.0.0.sql
+            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "INSERT INTO Systems (Name, Value) VALUES ('Version', '6.0.0')"
 
             docker run -it --net circleci_mm-test \
               --env-file="dotenv/test-schema-validation.env" \
@@ -390,21 +411,8 @@ jobs:
               --env MM_SQLSETTINGS_DRIVERNAME=mysql \
               -v ~/mattermost:/mattermost \
               -w /mattermost/mattermost-server \
-              mattermost/mattermost-build-server:20210720_golang-1.16.6 \
-              bash -c "ulimit -n 8096; make ARGS='version' run-cli && make MM_SQLSETTINGS_DATASOURCE='mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s' ARGS='version' run-cli"
-
-
-            echo "Ignoring known MySQL mismatch: ChannelMembers.SchemeGuest"
-            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;"
-            docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN SchemeGuest;"
-            echo "Ignoring known MySQL mismatch: ChannelMembers.MentionCountRoot and MsgCountRoot"
-            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN MentionCountRoot;"
-            docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN MentionCountRoot;"
-            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN MsgCountRoot;"
-            docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE ChannelMembers DROP COLUMN MsgCountRoot;"
-            echo "Ignoring known MySQL mismatch: Channels.TotalMsgCountRoot"
-            docker-compose --no-ansi exec -T mysql mysql -D migrated -uroot -pmostest -e "ALTER TABLE Channels DROP COLUMN TotalMsgCountRoot;"
-            docker-compose --no-ansi exec -T mysql mysql -D latest -uroot -pmostest -e "ALTER TABLE Channels DROP COLUMN TotalMsgCountRoot;"
+              mattermost/mattermost-build-server:20220415_golang-1.18.1 \
+              bash -c "ulimit -n 8096; make ARGS='db migrate' run-cli && make MM_SQLSETTINGS_DATASOURCE='mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s' ARGS='db migrate' run-cli"
 
             echo "Generating dump"
             docker-compose --no-ansi exec -T mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql
@@ -419,7 +427,7 @@ jobs:
 
   upload-s3-sha:
     docker:
-      - image: 'circleci/python:2.7'
+      - image: circleci/python:3.6
     working_directory: ~/mattermost/enterprise
     steps:
       - attach_workspace:
@@ -435,7 +443,7 @@ jobs:
 
   upload-s3:
     docker:
-      - image: 'circleci/python:2.7'
+      - image: circleci/python:3.6
     working_directory: ~/mattermost/enterprise
     steps:
       - attach_workspace:
@@ -452,19 +460,22 @@ jobs:
   build-docker:
     working_directory: ~/
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
           at: .
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.7
       - run:
           command: |
             export TAG="${CIRCLE_SHA1:0:7}"
+
             cd mattermost-server
-            export MM_PACKAGE=https://pr-builds.mattermost.com/mattermost-server/commit/${CIRCLE_SHA1}/mattermost-team-linux-amd64.tar.gz
-            docker build --build-arg MM_PACKAGE=$MM_PACKAGE -t mattermost/mattermost-team-edition:${TAG} build
+
+            export DOCKER_CLI_EXPERIMENTAL=enabled
             echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-            docker push mattermost/mattermost-team-edition:${TAG}
+            export MM_PACKAGE=https://pr-builds.mattermost.com/mattermost-server/commit/${CIRCLE_SHA1}/mattermost-team-linux-amd64.tar.gz
+            docker buildx build --push --build-arg MM_PACKAGE=$MM_PACKAGE -t mattermost/mm-te-test:${TAG} build
 
 workflows:
   version: 2
@@ -500,7 +511,10 @@ workflows:
       - check-mocks:
           requires:
             - setup
-      - check-migrations:
+      - check-email-templates:
+          requires:
+            - setup
+      - check-gen-serialized:
           requires:
             - setup
       - check-mattermost-vet:
@@ -514,7 +528,8 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
             - check-mattermost-vet
             - check-golangci-lint
             - build-api-spec
@@ -539,9 +554,10 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
       - test:
-          name: test-postgres
+          name: test-postgres-normal
           dbdriver: postgres
           dbsource: postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10
           racemode: ""
@@ -549,14 +565,26 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
+      - test:
+          name: test-postgres-binary
+          dbdriver: postgres
+          dbsource: postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10&binary_parameters=yes
+          racemode: ""
+          requires:
+            - check-app-layers
+            - check-store-layers
+            - check-mocks
+            - check-email-templates
+            - check-gen-serialized
       - test-schema:
           requires:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
-
+            - check-email-templates
+            - check-gen-serialized
   release-build:
     jobs:
       - setup:
@@ -594,7 +622,10 @@ workflows:
       - check-mocks:
           requires:
             - setup
-      - check-migrations:
+      - check-email-templates:
+          requires:
+            - setup
+      - check-gen-serialized:
           requires:
             - setup
       - check-mattermost-vet:
@@ -606,7 +637,8 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
             - check-mattermost-vet
             - check-golangci-lint
             - build-api-spec
@@ -615,7 +647,8 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
             - check-mattermost-vet
             - build-api-spec
       - test:
@@ -627,9 +660,10 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
       - test:
-          name: test-postgres
+          name: test-postgres-normal
           dbdriver: postgres
           dbsource: postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10
           racemode: "-race"
@@ -637,5 +671,17 @@ workflows:
             - check-app-layers
             - check-store-layers
             - check-mocks
-            - check-migrations
+            - check-email-templates
+            - check-gen-serialized
+      - test:
+          name: test-postgres-binary
+          dbdriver: postgres
+          dbsource: postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10&binary_parameters=yes
+          racemode: ""
+          requires:
+            - check-app-layers
+            - check-store-layers
+            - check-mocks
+            - check-email-templates
+            - check-gen-serialized
       # test-schema for master run in .gitlab-ci.yml

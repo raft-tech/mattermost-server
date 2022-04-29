@@ -16,6 +16,20 @@ import (
 	"github.com/mattermost/mattermost-server/v6/utils"
 )
 
+func getLicWithSkuShortName(skuShortName string) *model.License {
+	return &model.License{
+		Features: &model.Features{},
+		Customer: &model.Customer{
+			Name:  "TestName",
+			Email: "test@example.com",
+		},
+		SkuName:      "SKU NAME",
+		SkuShortName: skuShortName,
+		StartsAt:     model.GetMillis() - 1000,
+		ExpiresAt:    model.GetMillis() + 100000,
+	}
+}
+
 func TestSendNotifications(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
@@ -35,6 +49,37 @@ func TestSendNotifications(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, mentions)
 	require.True(t, utils.StringInSlice(th.BasicUser2.Id, mentions), "mentions", mentions)
+
+	t.Run("license is required for group mention", func(t *testing.T) {
+		group := th.CreateGroup()
+		group.AllowReference = true
+		group, updateErr := th.App.UpdateGroup(group)
+		require.Nil(t, updateErr)
+
+		_, upsertErr := th.App.UpsertGroupMember(group.Id, th.BasicUser2.Id)
+		require.Nil(t, upsertErr)
+
+		groupMentionPost := &model.Post{
+			UserId:    th.BasicUser.Id,
+			ChannelId: th.BasicChannel.Id,
+			Message:   fmt.Sprintf("hello @%s group", *group.Name),
+			CreateAt:  model.GetMillis() - 10000,
+		}
+		groupMentionPost, createPostErr := th.App.CreatePost(th.Context, groupMentionPost, th.BasicChannel, false, true)
+		require.Nil(t, createPostErr)
+
+		mentions, err = th.App.SendNotifications(groupMentionPost, th.BasicTeam, th.BasicChannel, th.BasicUser, nil, true)
+		require.NoError(t, err)
+		require.NotNil(t, mentions)
+		require.Len(t, mentions, 0)
+
+		th.App.Srv().SetLicense(getLicWithSkuShortName(model.LicenseShortSkuProfessional))
+
+		mentions, err = th.App.SendNotifications(groupMentionPost, th.BasicTeam, th.BasicChannel, th.BasicUser, nil, true)
+		require.NoError(t, err)
+		require.NotNil(t, mentions)
+		require.Len(t, mentions, 1)
+	})
 
 	dm, appErr := th.App.GetOrCreateDirectChannel(th.Context, th.BasicUser.Id, th.BasicUser2.Id)
 	require.Nil(t, appErr)
@@ -1043,17 +1088,31 @@ func TestAllowChannelMentions(t *testing.T) {
 }
 
 func TestAllowGroupMentions(t *testing.T) {
+	t.Skip("MM-41972")
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	post := &model.Post{ChannelId: th.BasicChannel.Id, UserId: th.BasicUser.Id}
 
-	t.Run("should return false without ldap groups license", func(t *testing.T) {
-		allowGroupMentions := th.App.allowGroupMentions(post)
-		assert.False(t, allowGroupMentions)
-	})
+	t.Run("should return false without the correct license sku short name", func(t *testing.T) {
+		tests := map[string]struct {
+			license *model.License
+			want    bool
+		}{
+			"no license":                        {nil, false},
+			"license with wrong SKU short name": {getLicWithSkuShortName("foobar"), false},
+			"'professional' license":            {getLicWithSkuShortName(model.LicenseShortSkuProfessional), true},
+			"'enterprise' license":              {getLicWithSkuShortName(model.LicenseShortSkuEnterprise), true},
+		}
 
-	th.App.Srv().SetLicense(model.NewTestLicense("ldap_groups"))
+		for name, tc := range tests {
+			t.Run(name, func(t *testing.T) {
+				th.App.Srv().SetLicense(tc.license)
+				got := th.App.allowGroupMentions(post)
+				assert.Equal(t, tc.want, got)
+			})
+		}
+	})
 
 	t.Run("should return true for a regular post with few channel members", func(t *testing.T) {
 		allowGroupMentions := th.App.allowGroupMentions(post)
@@ -1399,7 +1458,7 @@ func TestGetMentionKeywords(t *testing.T) {
 
 	profiles = map[string]*model.User{userNoMentionKeys.Id: userNoMentionKeys}
 	mentions = th.App.getMentionKeywordsInChannel(profiles, true, channelMemberNotifyPropsMapEmptyOff)
-	assert.Equal(t, 1, len(mentions), "should've returned one metion keyword")
+	assert.Equal(t, 1, len(mentions), "should've returned one mention keyword")
 	ids, ok = mentions["@user"]
 	assert.True(t, ok)
 	assert.Equal(t, userNoMentionKeys.Id, ids[0], "should've returned mention key of @user")
@@ -2261,7 +2320,7 @@ func TestProcessText(t *testing.T) {
 				ChannelMentioned: true,
 			},
 		},
-		"Mention other pontential users or system calls": {
+		"Mention other potential users or system calls": {
 			Text:     "hello @potentialuser and @otherpotentialuser",
 			Keywords: map[string][]string{},
 			Groups:   map[string]*model.Group{"engineering": {Name: model.NewString("engineering")}, "developers": {Name: model.NewString("developers")}},
@@ -2427,6 +2486,19 @@ func TestUserAllowsEmail(t *testing.T) {
 		}
 
 		assert.False(t, th.App.userAllowsEmail(user, channelMemberNotificationProps, &model.Post{Type: model.PostTypeAutoResponder}))
+	})
+
+	t.Run("should return false in the case user is a bot", func(t *testing.T) {
+		user := th.CreateUser()
+
+		th.App.ConvertUserToBot(user)
+
+		channelMemberNotifcationProps := model.StringMap{
+			model.EmailNotifyProp:      model.ChannelNotifyDefault,
+			model.MarkUnreadNotifyProp: model.ChannelMarkUnreadAll,
+		}
+
+		assert.False(t, th.App.userAllowsEmail(user, channelMemberNotifcationProps, &model.Post{Type: model.PostTypeAutoResponder}))
 	})
 
 }
@@ -2704,5 +2776,48 @@ func TestReplyPostNotificationsWithCRT(t *testing.T) {
 		require.Equal(t, int64(0), thread.UnreadMentions)
 		// Then: last post is still marked as unread
 		require.Equal(t, int64(1), thread.UnreadReplies)
+	})
+
+	t.Run("Replies to post created by webhook should not auto-follow webhook creator", func(t *testing.T) {
+		th := Setup(t).InitBasic()
+		defer th.TearDown()
+
+		th.App.UpdateConfig(func(cfg *model.Config) {
+			*cfg.ServiceSettings.ThreadAutoFollow = true
+			*cfg.ServiceSettings.CollapsedThreads = model.CollapsedThreadsDefaultOn
+		})
+
+		user := th.BasicUser
+
+		rootPost := &model.Post{
+			UserId:    user.Id,
+			ChannelId: th.BasicChannel.Id,
+			Message:   "a message",
+			Props:     model.StringInterface{"from_webhook": "true", "override_username": "a bot"},
+		}
+
+		rootPost, appErr := th.App.CreatePostMissingChannel(th.Context, rootPost, false)
+		require.Nil(t, appErr)
+
+		childPost := &model.Post{
+			UserId:    th.BasicUser2.Id,
+			ChannelId: th.BasicChannel.Id,
+			RootId:    rootPost.Id,
+			Message:   "a reply",
+		}
+		childPost, appErr = th.App.CreatePostMissingChannel(th.Context, childPost, false)
+		require.Nil(t, appErr)
+
+		postList := model.PostList{
+			Order: []string{rootPost.Id, childPost.Id},
+			Posts: map[string]*model.Post{rootPost.Id: rootPost, childPost.Id: childPost},
+		}
+		mentions, err := th.App.SendNotifications(childPost, th.BasicTeam, th.BasicChannel, th.BasicUser2, &postList, true)
+		require.NoError(t, err)
+		assert.False(t, utils.StringInSlice(user.Id, mentions))
+
+		membership, err := th.App.GetThreadMembershipForUser(user.Id, rootPost.Id)
+		assert.Error(t, err)
+		assert.Nil(t, membership)
 	})
 }

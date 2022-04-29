@@ -4,7 +4,6 @@
 package model
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -61,7 +60,43 @@ type ChannelMember struct {
 	ExplicitRoles    string    `json:"explicit_roles"`
 }
 
+// The following are some GraphQL methods necessary to return the
+// data in float64 type. The spec doesn't support 64 bit integers,
+// so we have to pass the data in float64. The _ at the end is
+// a hack to keep the attribute name same in GraphQL schema.
+
+func (o *ChannelMember) LastViewedAt_() float64 {
+	return float64(o.LastViewedAt)
+}
+
+func (o *ChannelMember) MsgCount_() float64 {
+	return float64(o.MsgCount)
+}
+
+func (o *ChannelMember) MentionCount_() float64 {
+	return float64(o.MentionCount)
+}
+
+func (o *ChannelMember) MentionCountRoot_() float64 {
+	return float64(o.MentionCountRoot)
+}
+
+func (o *ChannelMember) LastUpdateAt_() float64 {
+	return float64(o.LastUpdateAt)
+}
+
+// ChannelMemberWithTeamData contains ChannelMember appended with extra team information
+// as well.
+type ChannelMemberWithTeamData struct {
+	ChannelMember
+	TeamDisplayName string `json:"team_display_name"`
+	TeamName        string `json:"team_name"`
+	TeamUpdateAt    int64  `json:"team_update_at"`
+}
+
 type ChannelMembers []ChannelMember
+
+type ChannelMembersWithTeamData []ChannelMemberWithTeamData
 
 type ChannelMemberForExport struct {
 	ChannelMember
@@ -69,13 +104,7 @@ type ChannelMemberForExport struct {
 	Username    string
 }
 
-func (o *ChannelMember) ToJson() string {
-	b, _ := json.Marshal(o)
-	return string(b)
-}
-
 func (o *ChannelMember) IsValid() *AppError {
-
 	if !IsValidId(o.ChannelId) {
 		return NewAppError("ChannelMember.IsValid", "model.channel_member.is_valid.channel_id.app_error", nil, "", http.StatusBadRequest)
 	}
@@ -110,6 +139,11 @@ func (o *ChannelMember) IsValid() *AppError {
 		if len(ignoreChannelMentions) > 40 || !IsIgnoreChannelMentionsValid(ignoreChannelMentions) {
 			return NewAppError("ChannelMember.IsValid", "model.channel_member.is_valid.ignore_channel_mentions_value.app_error", nil, "ignore_channel_mentions="+ignoreChannelMentions, http.StatusBadRequest)
 		}
+	}
+
+	if len(o.Roles) > UserRolesMaxLength {
+		return NewAppError("ChannelMember.IsValid", "model.channel_member.is_valid.roles_limit.app_error",
+			map[string]interface{}{"Limit": UserRolesMaxLength}, "", http.StatusBadRequest)
 	}
 
 	return nil

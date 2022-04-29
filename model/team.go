@@ -4,9 +4,7 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -42,7 +40,7 @@ type Team struct {
 	LastTeamIconUpdate int64   `json:"last_team_icon_update,omitempty"`
 	SchemeId           *string `json:"scheme_id"`
 	GroupConstrained   *bool   `json:"group_constrained"`
-	PolicyID           *string `json:"policy_id" db:"-"`
+	PolicyID           *string `json:"policy_id"`
 }
 
 type TeamPatch struct {
@@ -68,12 +66,6 @@ type TeamsWithCount struct {
 	TotalCount int64   `json:"total_count"`
 }
 
-func InvitesFromJson(data io.Reader) *Invites {
-	var o *Invites
-	json.NewDecoder(data).Decode(&o)
-	return o
-}
-
 func (o *Invites) ToEmailList() []string {
 	emailList := make([]string, len(o.Invites))
 	for _, invite := range o.Invites {
@@ -82,61 +74,11 @@ func (o *Invites) ToEmailList() []string {
 	return emailList
 }
 
-func (o *Invites) ToJson() string {
-	b, _ := json.Marshal(o)
-	return string(b)
-}
-
-func (o *Team) ToJson() string {
-	b, _ := json.Marshal(o)
-	return string(b)
-}
-
-func TeamFromJson(data io.Reader) *Team {
-	var o *Team
-	json.NewDecoder(data).Decode(&o)
-	return o
-}
-
-func TeamMapToJson(u map[string]*Team) string {
-	b, _ := json.Marshal(u)
-	return string(b)
-}
-
-func TeamMapFromJson(data io.Reader) map[string]*Team {
-	var teams map[string]*Team
-	json.NewDecoder(data).Decode(&teams)
-	return teams
-}
-
-func TeamListToJson(t []*Team) string {
-	b, _ := json.Marshal(t)
-	return string(b)
-}
-
-func TeamsWithCountToJson(tlc *TeamsWithCount) []byte {
-	b, _ := json.Marshal(tlc)
-	return b
-}
-
-func TeamsWithCountFromJson(data io.Reader) *TeamsWithCount {
-	var twc *TeamsWithCount
-	json.NewDecoder(data).Decode(&twc)
-	return twc
-}
-
-func TeamListFromJson(data io.Reader) []*Team {
-	var teams []*Team
-	json.NewDecoder(data).Decode(&teams)
-	return teams
-}
-
 func (o *Team) Etag() string {
 	return Etag(o.Id, o.UpdateAt)
 }
 
 func (o *Team) IsValid() *AppError {
-
 	if !IsValidId(o.Id) {
 		return NewAppError("Team.IsValid", "model.team.is_valid.id.app_error", nil, "", http.StatusBadRequest)
 	}
@@ -310,22 +252,21 @@ func (o *Team) IsGroupConstrained() bool {
 	return o.GroupConstrained != nil && *o.GroupConstrained
 }
 
-func (t *TeamPatch) ToJson() string {
-	b, err := json.Marshal(t)
-	if err != nil {
-		return ""
-	}
-
-	return string(b)
+// ShallowCopy returns a shallow copy of team.
+func (o *Team) ShallowCopy() *Team {
+	c := *o
+	return &c
 }
 
-func TeamPatchFromJson(data io.Reader) *TeamPatch {
-	decoder := json.NewDecoder(data)
-	var team TeamPatch
-	err := decoder.Decode(&team)
-	if err != nil {
-		return nil
-	}
+// The following are some GraphQL methods necessary to return the
+// data in float64 type. The spec doesn't support 64 bit integers,
+// so we have to pass the data in float64. The _ at the end is
+// a hack to keep the attribute name same in GraphQL schema.
 
-	return &team
+func (o *Team) UpdateAt_() float64 {
+	return float64(o.UpdateAt)
+}
+
+func (o *Team) LastTeamIconUpdate_() float64 {
+	return float64(o.LastTeamIconUpdate)
 }

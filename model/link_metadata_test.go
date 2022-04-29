@@ -160,14 +160,16 @@ func TestLinkMetadataDeserializeDataToConcreteType(t *testing.T) {
 			Width:  500,
 		}
 
+		js, err := json.Marshal(image)
+		assert.NoError(t, err)
 		metadata := &LinkMetadata{
 			Type: LinkMetadataTypeImage,
-			Data: []byte(image.ToJson()),
+			Data: js,
 		}
 
 		require.IsType(t, []byte{}, metadata.Data)
 
-		err := metadata.DeserializeDataToConcreteType()
+		err = metadata.DeserializeDataToConcreteType()
 
 		assert.NoError(t, err)
 		assert.IsType(t, &PostImage{}, metadata.Data)
@@ -251,7 +253,7 @@ func TestTruncateText(t *testing.T) {
 	t.Run("Truncates string to 300 + 5", func(t *testing.T) {
 		assert.Equal(t, utf8.RuneCountInString(truncateText(BigText)), 305, "should be 300 chars + 5")
 	})
-	t.Run("Truncated text ends in elipsis", func(t *testing.T) {
+	t.Run("Truncated text ends in ellipsis", func(t *testing.T) {
 		assert.True(t, strings.HasSuffix(truncateText(BigText), "[...]"))
 	})
 }

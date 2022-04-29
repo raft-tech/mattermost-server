@@ -181,7 +181,6 @@ func createPost(ss store.Store, channelId, userId, rootId, parentId string) *mod
 	m.ChannelId = channelId
 	m.UserId = userId
 	m.RootId = rootId
-	m.ParentId = parentId
 	m.Message = "zz" + model.NewId() + "b"
 	p, _ := ss.Post().Save(&m)
 	return p
@@ -195,7 +194,7 @@ func createPostWithUserId(ss store.Store, id string) *model.Post {
 	return createPost(ss, model.NewId(), id, "", "")
 }
 
-func createPreferences(ss store.Store, userId string) *model.Preferences {
+func createPreferences(ss store.Store, userId string) model.Preferences {
 	preferences := model.Preferences{
 		{
 			UserId:   userId,
@@ -204,8 +203,8 @@ func createPreferences(ss store.Store, userId string) *model.Preferences {
 			Value:    "somevalue",
 		},
 	}
-	ss.Preference().Save(&preferences)
-	return &preferences
+	ss.Preference().Save(preferences)
+	return preferences
 }
 
 func createReaction(ss store.Store, userId, postId string) *model.Reaction {
@@ -268,6 +267,38 @@ func createDefaultRoles(ss store.Store) {
 		Permissions: []string{
 			model.PermissionReadChannel.Id,
 			model.PermissionCreatePost.Id,
+		},
+	})
+
+	ss.Role().Save(&model.Role{
+		Name:        model.PlaybookAdminRoleId,
+		DisplayName: model.PlaybookAdminRoleId,
+		Permissions: []string{
+			model.PermissionPrivatePlaybookManageMembers.Id,
+		},
+	})
+
+	ss.Role().Save(&model.Role{
+		Name:        model.PlaybookMemberRoleId,
+		DisplayName: model.PlaybookMemberRoleId,
+		Permissions: []string{
+			model.PermissionPrivatePlaybookManageMembers.Id,
+		},
+	})
+
+	ss.Role().Save(&model.Role{
+		Name:        model.RunAdminRoleId,
+		DisplayName: model.RunAdminRoleId,
+		Permissions: []string{
+			model.PermissionRunManageMembers.Id,
+		},
+	})
+
+	ss.Role().Save(&model.Role{
+		Name:        model.RunMemberRoleId,
+		DisplayName: model.RunMemberRoleId,
+		Permissions: []string{
+			model.PermissionRunManageMembers.Id,
 		},
 	})
 }
@@ -380,15 +411,15 @@ func TestCheckParentChildIntegrity(t *testing.T) {
 func TestCheckChannelsCommandWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsCommandWebhooksIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
 			require.Empty(t, data.Records)
-		})
 
+		})
 		t.Run("should generate a report with one record", func(t *testing.T) {
 			channelId := model.NewId()
 			cwh := createCommandWebhook(ss, model.NewId(), model.NewId(), channelId)
@@ -400,7 +431,7 @@ func TestCheckChannelsCommandWebhooksIntegrity(t *testing.T) {
 				ParentId: &channelId,
 				ChildId:  &cwh.Id,
 			}, data.Records[0])
-			dbmap.Delete(cwh)
+			dbmap.Exec(`DELETE FROM CommandWebhooks Where Id=?`, cwh.Id)
 		})
 	})
 }
@@ -408,7 +439,7 @@ func TestCheckChannelsCommandWebhooksIntegrity(t *testing.T) {
 func TestCheckChannelsChannelMemberHistoryIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsChannelMemberHistoryIntegrity(store)
@@ -421,7 +452,8 @@ func TestCheckChannelsChannelMemberHistoryIntegrity(t *testing.T) {
 			channel := createChannel(ss, model.NewId(), model.NewId())
 			user := createUser(ss)
 			cmh := createChannelMemberHistory(ss, channel.Id, user.Id)
-			dbmap.Delete(channel)
+
+			dbmap.Exec(`DELETE FROM Channels Where Id=?`, channel.Id)
 			result := checkChannelsChannelMemberHistoryIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -429,7 +461,7 @@ func TestCheckChannelsChannelMemberHistoryIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &cmh.ChannelId,
 			}, data.Records[0])
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			dbmap.Exec(`DELETE FROM ChannelMemberHistory`)
 		})
 	})
@@ -438,7 +470,7 @@ func TestCheckChannelsChannelMemberHistoryIntegrity(t *testing.T) {
 func TestCheckChannelsChannelMembersIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsChannelMembersIntegrity(store)
@@ -450,7 +482,7 @@ func TestCheckChannelsChannelMembersIntegrity(t *testing.T) {
 		t.Run("should generate a report with one record", func(t *testing.T) {
 			channel := createChannel(ss, model.NewId(), model.NewId())
 			member := createChannelMemberWithChannelId(ss, channel.Id)
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels Where Id=?`, channel.Id)
 			result := checkChannelsChannelMembersIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -466,7 +498,7 @@ func TestCheckChannelsChannelMembersIntegrity(t *testing.T) {
 func TestCheckChannelsIncomingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsIncomingWebhooksIntegrity(store)
@@ -486,7 +518,7 @@ func TestCheckChannelsIncomingWebhooksIntegrity(t *testing.T) {
 				ParentId: &channelId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM IncomingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -494,7 +526,7 @@ func TestCheckChannelsIncomingWebhooksIntegrity(t *testing.T) {
 func TestCheckChannelsOutgoingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsOutgoingWebhooksIntegrity(store)
@@ -507,7 +539,7 @@ func TestCheckChannelsOutgoingWebhooksIntegrity(t *testing.T) {
 			channel := createChannel(ss, model.NewId(), model.NewId())
 			channelId := channel.Id
 			wh := createOutgoingWebhook(ss, model.NewId(), channelId, model.NewId())
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels Where Id=?`, channel.Id)
 			result := checkChannelsOutgoingWebhooksIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -516,7 +548,7 @@ func TestCheckChannelsOutgoingWebhooksIntegrity(t *testing.T) {
 				ParentId: &channelId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM OutgoingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -524,7 +556,7 @@ func TestCheckChannelsOutgoingWebhooksIntegrity(t *testing.T) {
 func TestCheckChannelsPostsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkChannelsPostsIntegrity(store)
@@ -543,7 +575,7 @@ func TestCheckChannelsPostsIntegrity(t *testing.T) {
 				ParentId: &post.ChannelId,
 				ChildId:  &post.Id,
 			}, data.Records[0])
-			dbmap.Delete(post)
+			dbmap.Exec(`DELETE FROM Posts WHERE Id=?`, post.Id)
 		})
 	})
 }
@@ -551,7 +583,7 @@ func TestCheckChannelsPostsIntegrity(t *testing.T) {
 func TestCheckCommandsCommandWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkCommandsCommandWebhooksIntegrity(store)
@@ -571,7 +603,7 @@ func TestCheckCommandsCommandWebhooksIntegrity(t *testing.T) {
 				ParentId: &commandId,
 				ChildId:  &cwh.Id,
 			}, data.Records[0])
-			dbmap.Delete(cwh)
+			dbmap.Exec(`DELETE FROM CommandWebhooks Where Id=?`, cwh.Id)
 		})
 	})
 }
@@ -579,7 +611,7 @@ func TestCheckCommandsCommandWebhooksIntegrity(t *testing.T) {
 func TestCheckPostsFileInfoIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkPostsFileInfoIntegrity(store)
@@ -599,52 +631,7 @@ func TestCheckPostsFileInfoIntegrity(t *testing.T) {
 				ParentId: &postId,
 				ChildId:  &info.Id,
 			}, data.Records[0])
-			dbmap.Delete(info)
-		})
-	})
-}
-
-func TestCheckPostsPostsParentIdIntegrity(t *testing.T) {
-	StoreTest(t, func(t *testing.T, ss store.Store) {
-		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
-
-		t.Run("should generate a report with no records", func(t *testing.T) {
-			result := checkPostsPostsParentIdIntegrity(store)
-			require.NoError(t, result.Err)
-			data := result.Data.(model.RelationalIntegrityCheckData)
-			require.Empty(t, data.Records)
-		})
-
-		t.Run("should generate a report with no records", func(t *testing.T) {
-			root := createPost(ss, model.NewId(), model.NewId(), "", "")
-			parent := createPost(ss, model.NewId(), model.NewId(), root.Id, root.Id)
-			post := createPost(ss, model.NewId(), model.NewId(), root.Id, parent.Id)
-			result := checkPostsPostsParentIdIntegrity(store)
-			require.NoError(t, result.Err)
-			data := result.Data.(model.RelationalIntegrityCheckData)
-			require.Empty(t, data.Records)
-			dbmap.Delete(parent)
-			dbmap.Delete(root)
-			dbmap.Delete(post)
-		})
-
-		t.Run("should generate a report with one record", func(t *testing.T) {
-			root := createPost(ss, model.NewId(), model.NewId(), "", "")
-			parent := createPost(ss, model.NewId(), model.NewId(), root.Id, root.Id)
-			parentId := parent.Id
-			post := createPost(ss, model.NewId(), model.NewId(), root.Id, parent.Id)
-			dbmap.Delete(parent)
-			result := checkPostsPostsParentIdIntegrity(store)
-			require.NoError(t, result.Err)
-			data := result.Data.(model.RelationalIntegrityCheckData)
-			require.Len(t, data.Records, 1)
-			require.Equal(t, model.OrphanedRecord{
-				ParentId: &parentId,
-				ChildId:  &post.Id,
-			}, data.Records[0])
-			dbmap.Delete(root)
-			dbmap.Delete(post)
+			dbmap.Exec(`DELETE FROM FileInfo WHERE Id=?`, info.Id)
 		})
 	})
 }
@@ -652,7 +639,7 @@ func TestCheckPostsPostsParentIdIntegrity(t *testing.T) {
 func TestCheckPostsPostsRootIdIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkPostsPostsRootIdIntegrity(store)
@@ -665,7 +652,7 @@ func TestCheckPostsPostsRootIdIntegrity(t *testing.T) {
 			root := createPost(ss, model.NewId(), model.NewId(), "", "")
 			rootId := root.Id
 			post := createPost(ss, model.NewId(), model.NewId(), root.Id, root.Id)
-			dbmap.Delete(root)
+			dbmap.Exec(`DELETE FROM Posts WHERE Id=?`, root.Id)
 			result := checkPostsPostsRootIdIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -674,7 +661,7 @@ func TestCheckPostsPostsRootIdIntegrity(t *testing.T) {
 				ParentId: &rootId,
 				ChildId:  &post.Id,
 			}, data.Records[0])
-			dbmap.Delete(post)
+			dbmap.Exec(`DELETE FROM Posts WHERE Id=?`, post.Id)
 		})
 	})
 }
@@ -682,7 +669,7 @@ func TestCheckPostsPostsRootIdIntegrity(t *testing.T) {
 func TestCheckPostsReactionsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkPostsReactionsIntegrity(store)
@@ -701,7 +688,7 @@ func TestCheckPostsReactionsIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &postId,
 			}, data.Records[0])
-			dbmap.Delete(reaction)
+			dbmap.Exec(`DELETE FROM Reactions WHERE PostId=? AND UserId=? AND EmojiName=?`, reaction.PostId, reaction.UserId, reaction.EmojiName)
 		})
 	})
 }
@@ -709,7 +696,7 @@ func TestCheckPostsReactionsIntegrity(t *testing.T) {
 func TestCheckSchemesChannelsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkSchemesChannelsIntegrity(store)
@@ -723,7 +710,7 @@ func TestCheckSchemesChannelsIntegrity(t *testing.T) {
 			scheme := createScheme(ss)
 			schemeId := scheme.Id
 			channel := createChannelWithSchemeId(ss, &schemeId)
-			dbmap.Delete(scheme)
+			dbmap.Exec(`DELETE FROM Schemes WHERE Id=?`, scheme.Id)
 			result := checkSchemesChannelsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -732,7 +719,7 @@ func TestCheckSchemesChannelsIntegrity(t *testing.T) {
 				ParentId: &schemeId,
 				ChildId:  &channel.Id,
 			}, data.Records[0])
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
 		})
 	})
 }
@@ -740,7 +727,7 @@ func TestCheckSchemesChannelsIntegrity(t *testing.T) {
 func TestCheckSchemesTeamsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkSchemesTeamsIntegrity(store)
@@ -754,7 +741,7 @@ func TestCheckSchemesTeamsIntegrity(t *testing.T) {
 			scheme := createScheme(ss)
 			schemeId := scheme.Id
 			team := createTeamWithSchemeId(ss, &schemeId)
-			dbmap.Delete(scheme)
+			dbmap.Exec(`DELETE FROM Schemes WHERE Id=?`, scheme.Id)
 			result := checkSchemesTeamsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -763,7 +750,7 @@ func TestCheckSchemesTeamsIntegrity(t *testing.T) {
 				ParentId: &schemeId,
 				ChildId:  &team.Id,
 			}, data.Records[0])
-			dbmap.Delete(team)
+			dbmap.Exec(`DELETE FROM Teams WHERE Id=?`, team.Id)
 		})
 	})
 }
@@ -771,7 +758,7 @@ func TestCheckSchemesTeamsIntegrity(t *testing.T) {
 func TestCheckSessionsAuditsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkSessionsAuditsIntegrity(store)
@@ -785,7 +772,7 @@ func TestCheckSessionsAuditsIntegrity(t *testing.T) {
 			session := createSession(ss, model.NewId())
 			sessionId := session.Id
 			audit := createAudit(ss, userId, sessionId)
-			dbmap.Delete(session)
+			dbmap.Exec(`DELETE FROM Sessions WHERE Id=?`, session.Id)
 			result := checkSessionsAuditsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -802,7 +789,7 @@ func TestCheckSessionsAuditsIntegrity(t *testing.T) {
 func TestCheckTeamsChannelsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkTeamsChannelsIntegrity(store)
@@ -821,7 +808,7 @@ func TestCheckTeamsChannelsIntegrity(t *testing.T) {
 				ParentId: &channel.TeamId,
 				ChildId:  &channel.Id,
 			}, data.Records[0])
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
 		})
 
 		t.Run("should not include direct channel with empty teamid", func(t *testing.T) {
@@ -839,10 +826,10 @@ func TestCheckTeamsChannelsIntegrity(t *testing.T) {
 				ParentId: &channel.TeamId,
 				ChildId:  &channel.Id,
 			}, data.Records[0])
-			dbmap.Delete(channel)
-			dbmap.Delete(userA)
-			dbmap.Delete(userB)
-			dbmap.Delete(direct)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, userA.Id)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, userB.Id)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, direct.Id)
 		})
 
 		t.Run("should include direct channel with non empty teamid", func(t *testing.T) {
@@ -866,10 +853,10 @@ func TestCheckTeamsChannelsIntegrity(t *testing.T) {
 				ParentId: model.NewString("test"),
 				ChildId:  &direct.Id,
 			}, data.Records[1])
-			dbmap.Delete(channel)
-			dbmap.Delete(userA)
-			dbmap.Delete(userB)
-			dbmap.Delete(direct)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, userA.Id)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, userB.Id)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, direct.Id)
 			dbmap.Exec("DELETE FROM ChannelMembers")
 		})
 	})
@@ -878,7 +865,7 @@ func TestCheckTeamsChannelsIntegrity(t *testing.T) {
 func TestCheckTeamsCommandsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkTeamsCommandsIntegrity(store)
@@ -898,7 +885,7 @@ func TestCheckTeamsCommandsIntegrity(t *testing.T) {
 				ParentId: &teamId,
 				ChildId:  &cmd.Id,
 			}, data.Records[0])
-			dbmap.Delete(cmd)
+			dbmap.Exec(`DELETE FROM Commands WHERE Id=?`, cmd.Id)
 		})
 	})
 }
@@ -906,7 +893,7 @@ func TestCheckTeamsCommandsIntegrity(t *testing.T) {
 func TestCheckTeamsIncomingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkTeamsIncomingWebhooksIntegrity(store)
@@ -926,7 +913,7 @@ func TestCheckTeamsIncomingWebhooksIntegrity(t *testing.T) {
 				ParentId: &teamId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM IncomingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -934,7 +921,7 @@ func TestCheckTeamsIncomingWebhooksIntegrity(t *testing.T) {
 func TestCheckTeamsOutgoingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkTeamsOutgoingWebhooksIntegrity(store)
@@ -954,7 +941,7 @@ func TestCheckTeamsOutgoingWebhooksIntegrity(t *testing.T) {
 				ParentId: &teamId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM OutgoingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -962,7 +949,7 @@ func TestCheckTeamsOutgoingWebhooksIntegrity(t *testing.T) {
 func TestCheckTeamsTeamMembersIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkTeamsTeamMembersIntegrity(store)
@@ -974,7 +961,7 @@ func TestCheckTeamsTeamMembersIntegrity(t *testing.T) {
 		t.Run("should generate a report with one record", func(t *testing.T) {
 			team := createTeam(ss)
 			member := createTeamMember(ss, team.Id, model.NewId())
-			dbmap.Delete(team)
+			dbmap.Exec(`DELETE FROM Teams WHERE Id=?`, team.Id)
 			result := checkTeamsTeamMembersIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -990,7 +977,7 @@ func TestCheckTeamsTeamMembersIntegrity(t *testing.T) {
 func TestCheckUsersAuditsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersAuditsIntegrity(store)
@@ -1003,7 +990,7 @@ func TestCheckUsersAuditsIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			audit := createAudit(ss, userId, model.NewId())
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersAuditsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1020,7 +1007,7 @@ func TestCheckUsersAuditsIntegrity(t *testing.T) {
 func TestCheckUsersCommandWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersCommandWebhooksIntegrity(store)
@@ -1040,7 +1027,7 @@ func TestCheckUsersCommandWebhooksIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &cwh.Id,
 			}, data.Records[0])
-			dbmap.Delete(cwh)
+			dbmap.Exec(`DELETE FROM CommandWebhooks WHERE Id=?`, cwh.Id)
 		})
 	})
 }
@@ -1048,7 +1035,7 @@ func TestCheckUsersCommandWebhooksIntegrity(t *testing.T) {
 func TestCheckUsersChannelsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersChannelsIntegrity(store)
@@ -1067,7 +1054,7 @@ func TestCheckUsersChannelsIntegrity(t *testing.T) {
 				ParentId: &channel.CreatorId,
 				ChildId:  &channel.Id,
 			}, data.Records[0])
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
 		})
 	})
 }
@@ -1075,7 +1062,7 @@ func TestCheckUsersChannelsIntegrity(t *testing.T) {
 func TestCheckUsersChannelMemberHistoryIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersChannelMemberHistoryIntegrity(store)
@@ -1088,7 +1075,7 @@ func TestCheckUsersChannelMemberHistoryIntegrity(t *testing.T) {
 			user := createUser(ss)
 			channel := createChannel(ss, model.NewId(), model.NewId())
 			cmh := createChannelMemberHistory(ss, channel.Id, user.Id)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersChannelMemberHistoryIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1096,7 +1083,7 @@ func TestCheckUsersChannelMemberHistoryIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &cmh.UserId,
 			}, data.Records[0])
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
 			dbmap.Exec(`DELETE FROM ChannelMemberHistory`)
 		})
 	})
@@ -1105,7 +1092,7 @@ func TestCheckUsersChannelMemberHistoryIntegrity(t *testing.T) {
 func TestCheckUsersChannelMembersIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersChannelMembersIntegrity(store)
@@ -1118,7 +1105,7 @@ func TestCheckUsersChannelMembersIntegrity(t *testing.T) {
 			user := createUser(ss)
 			channel := createChannelWithCreatorId(ss, user.Id)
 			member := createChannelMember(ss, channel.Id, user.Id)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersChannelMembersIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1126,7 +1113,7 @@ func TestCheckUsersChannelMembersIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &member.UserId,
 			}, data.Records[0])
-			dbmap.Delete(channel)
+			dbmap.Exec(`DELETE FROM Channels WHERE Id=?`, channel.Id)
 			ss.Channel().PermanentDeleteMembersByUser(member.UserId)
 		})
 	})
@@ -1135,7 +1122,7 @@ func TestCheckUsersChannelMembersIntegrity(t *testing.T) {
 func TestCheckUsersCommandsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersCommandsIntegrity(store)
@@ -1155,7 +1142,7 @@ func TestCheckUsersCommandsIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &cmd.Id,
 			}, data.Records[0])
-			dbmap.Delete(cmd)
+			dbmap.Exec(`DELETE FROM Commands WHERE Id=?`, cmd.Id)
 		})
 	})
 }
@@ -1163,7 +1150,7 @@ func TestCheckUsersCommandsIntegrity(t *testing.T) {
 func TestCheckUsersCompliancesIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersCompliancesIntegrity(store)
@@ -1176,7 +1163,7 @@ func TestCheckUsersCompliancesIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			compliance := createCompliance(ss, userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersCompliancesIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1185,7 +1172,7 @@ func TestCheckUsersCompliancesIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &compliance.Id,
 			}, data.Records[0])
-			dbmap.Delete(compliance)
+			dbmap.Exec(`DELETE FROM Compliances WHERE Id=?`, compliance.Id)
 		})
 	})
 }
@@ -1193,7 +1180,7 @@ func TestCheckUsersCompliancesIntegrity(t *testing.T) {
 func TestCheckUsersEmojiIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersEmojiIntegrity(store)
@@ -1206,7 +1193,7 @@ func TestCheckUsersEmojiIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			emoji := createEmoji(ss, userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersEmojiIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1215,7 +1202,7 @@ func TestCheckUsersEmojiIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &emoji.Id,
 			}, data.Records[0])
-			dbmap.Delete(emoji)
+			dbmap.Exec(`DELETE FROM Emoji WHERE Id=?`, emoji.Id)
 		})
 	})
 }
@@ -1223,7 +1210,7 @@ func TestCheckUsersEmojiIntegrity(t *testing.T) {
 func TestCheckUsersFileInfoIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersFileInfoIntegrity(store)
@@ -1236,7 +1223,7 @@ func TestCheckUsersFileInfoIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			info := createFileInfo(ss, model.NewId(), userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersFileInfoIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1245,7 +1232,7 @@ func TestCheckUsersFileInfoIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &info.Id,
 			}, data.Records[0])
-			dbmap.Delete(info)
+			dbmap.Exec(`DELETE FROM FileInfo WHERE Id=?`, info.Id)
 		})
 	})
 }
@@ -1253,7 +1240,7 @@ func TestCheckUsersFileInfoIntegrity(t *testing.T) {
 func TestCheckUsersIncomingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersIncomingWebhooksIntegrity(store)
@@ -1273,7 +1260,7 @@ func TestCheckUsersIncomingWebhooksIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM IncomingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -1281,7 +1268,7 @@ func TestCheckUsersIncomingWebhooksIntegrity(t *testing.T) {
 func TestCheckUsersOAuthAccessDataIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersOAuthAccessDataIntegrity(store)
@@ -1294,7 +1281,7 @@ func TestCheckUsersOAuthAccessDataIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			ad := createOAuthAccessData(ss, userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersOAuthAccessDataIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1311,7 +1298,7 @@ func TestCheckUsersOAuthAccessDataIntegrity(t *testing.T) {
 func TestCheckUsersOAuthAppsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersOAuthAppsIntegrity(store)
@@ -1324,7 +1311,7 @@ func TestCheckUsersOAuthAppsIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			app := createOAuthApp(ss, userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersOAuthAppsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1341,7 +1328,7 @@ func TestCheckUsersOAuthAppsIntegrity(t *testing.T) {
 func TestCheckUsersOAuthAuthDataIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersOAuthAuthDataIntegrity(store)
@@ -1354,7 +1341,7 @@ func TestCheckUsersOAuthAuthDataIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			ad := createOAuthAuthData(ss, userId)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersOAuthAuthDataIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1371,7 +1358,7 @@ func TestCheckUsersOAuthAuthDataIntegrity(t *testing.T) {
 func TestCheckUsersOutgoingWebhooksIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersOutgoingWebhooksIntegrity(store)
@@ -1391,7 +1378,7 @@ func TestCheckUsersOutgoingWebhooksIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &wh.Id,
 			}, data.Records[0])
-			dbmap.Delete(wh)
+			dbmap.Exec(`DELETE FROM OutgoingWebhooks WHERE Id=?`, wh.Id)
 		})
 	})
 }
@@ -1399,7 +1386,7 @@ func TestCheckUsersOutgoingWebhooksIntegrity(t *testing.T) {
 func TestCheckUsersPostsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersPostsIntegrity(store)
@@ -1418,7 +1405,7 @@ func TestCheckUsersPostsIntegrity(t *testing.T) {
 				ParentId: &post.UserId,
 				ChildId:  &post.Id,
 			}, data.Records[0])
-			dbmap.Delete(post)
+			dbmap.Exec(`DELETE FROM Posts WHERE Id=?`, post.Id)
 		})
 	})
 }
@@ -1426,7 +1413,7 @@ func TestCheckUsersPostsIntegrity(t *testing.T) {
 func TestCheckUsersPreferencesIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersPreferencesIntegrity(store)
@@ -1446,7 +1433,7 @@ func TestCheckUsersPreferencesIntegrity(t *testing.T) {
 			data := result.Data.(model.RelationalIntegrityCheckData)
 			require.Empty(t, data.Records)
 			dbmap.Exec(`DELETE FROM Preferences`)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 		})
 
 		t.Run("should generate a report with one record", func(t *testing.T) {
@@ -1455,7 +1442,7 @@ func TestCheckUsersPreferencesIntegrity(t *testing.T) {
 			userId := user.Id
 			preferences := createPreferences(ss, userId)
 			require.NotNil(t, preferences)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersPreferencesIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1464,7 +1451,7 @@ func TestCheckUsersPreferencesIntegrity(t *testing.T) {
 				ParentId: &userId,
 			}, data.Records[0])
 			dbmap.Exec(`DELETE FROM Preferences`)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 		})
 	})
 }
@@ -1472,7 +1459,7 @@ func TestCheckUsersPreferencesIntegrity(t *testing.T) {
 func TestCheckUsersReactionsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersReactionsIntegrity(store)
@@ -1485,7 +1472,7 @@ func TestCheckUsersReactionsIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			reaction := createReaction(ss, user.Id, model.NewId())
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersReactionsIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1493,7 +1480,7 @@ func TestCheckUsersReactionsIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &userId,
 			}, data.Records[0])
-			dbmap.Delete(reaction)
+			dbmap.Exec(`DELETE FROM Reactions WHERE PostId=? AND UserId=? AND EmojiName=?`, reaction.PostId, reaction.UserId, reaction.EmojiName)
 		})
 	})
 }
@@ -1501,7 +1488,7 @@ func TestCheckUsersReactionsIntegrity(t *testing.T) {
 func TestCheckUsersSessionsIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersSessionsIntegrity(store)
@@ -1521,7 +1508,7 @@ func TestCheckUsersSessionsIntegrity(t *testing.T) {
 				ParentId: &userId,
 				ChildId:  &session.Id,
 			}, data.Records[0])
-			dbmap.Delete(session)
+			dbmap.Exec(`DELETE FROM Sessions WHERE Id=?`, session.Id)
 		})
 	})
 }
@@ -1529,7 +1516,7 @@ func TestCheckUsersSessionsIntegrity(t *testing.T) {
 func TestCheckUsersStatusIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersStatusIntegrity(store)
@@ -1542,7 +1529,7 @@ func TestCheckUsersStatusIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			status := createStatus(ss, user.Id)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersStatusIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1550,7 +1537,7 @@ func TestCheckUsersStatusIntegrity(t *testing.T) {
 			require.Equal(t, model.OrphanedRecord{
 				ParentId: &userId,
 			}, data.Records[0])
-			dbmap.Delete(status)
+			dbmap.Exec(`DELETE FROM Status WHERE Id=?`, status.UserId)
 		})
 	})
 }
@@ -1558,7 +1545,7 @@ func TestCheckUsersStatusIntegrity(t *testing.T) {
 func TestCheckUsersTeamMembersIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersTeamMembersIntegrity(store)
@@ -1571,7 +1558,7 @@ func TestCheckUsersTeamMembersIntegrity(t *testing.T) {
 			user := createUser(ss)
 			team := createTeam(ss)
 			member := createTeamMember(ss, team.Id, user.Id)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersTeamMembersIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)
@@ -1580,7 +1567,7 @@ func TestCheckUsersTeamMembersIntegrity(t *testing.T) {
 				ParentId: &member.UserId,
 			}, data.Records[0])
 			ss.Team().RemoveAllMembersByTeam(member.TeamId)
-			dbmap.Delete(team)
+			dbmap.Exec(`DELETE FROM Teams WHERE Id=?`, team.Id)
 		})
 	})
 }
@@ -1588,7 +1575,7 @@ func TestCheckUsersTeamMembersIntegrity(t *testing.T) {
 func TestCheckUsersUserAccessTokensIntegrity(t *testing.T) {
 	StoreTest(t, func(t *testing.T, ss store.Store) {
 		store := ss.(*SqlStore)
-		dbmap := store.GetMaster()
+		dbmap := store.GetMasterX()
 
 		t.Run("should generate a report with no records", func(t *testing.T) {
 			result := checkUsersUserAccessTokensIntegrity(store)
@@ -1601,7 +1588,7 @@ func TestCheckUsersUserAccessTokensIntegrity(t *testing.T) {
 			user := createUser(ss)
 			userId := user.Id
 			uat := createUserAccessToken(ss, user.Id)
-			dbmap.Delete(user)
+			dbmap.Exec(`DELETE FROM Users WHERE Id=?`, user.Id)
 			result := checkUsersUserAccessTokensIntegrity(store)
 			require.NoError(t, result.Err)
 			data := result.Data.(model.RelationalIntegrityCheckData)

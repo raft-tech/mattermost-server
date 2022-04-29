@@ -148,14 +148,6 @@
     "translation": "此频道已转换到私有频道。"
   },
   {
-    "id": "api.channel.convert_channel_to_private.default_channel_error",
-    "translation": "默认频道无法转换成私有频道。"
-  },
-  {
-    "id": "api.channel.convert_channel_to_private.private_channel_error",
-    "translation": "请求转换的频道已经是私有频道。"
-  },
-  {
     "id": "api.channel.create_channel.direct_channel.app_error",
     "translation": "必须使用 createDirectChannel API 创建私信频道。"
   },
@@ -639,7 +631,7 @@
   },
   {
     "id": "api.command_invite.channel.error",
-    "translation": "无法找到频道{{.Channel}}。请使用[频道识别](https://about.mattermost.com/default-channel-handle-documentation)以分辨频道。"
+    "translation": "无法找到频道{{.Channel}}。请使用[频道识别](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel)以分辨频道。"
   },
   {
     "id": "api.command_invite.desc",
@@ -783,7 +775,7 @@
   },
   {
     "id": "api.command_mute.error",
-    "translation": "无法找到频道{{.Channel}}。请使用[频道识别](https://about.mattermost.com/default-channel-handle-documentation)以分辨频道。"
+    "translation": "无法找到频道{{.Channel}}。请使用[频道识别](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel)以分辨频道。"
   },
   {
     "id": "api.command_mute.hint",
@@ -795,7 +787,7 @@
   },
   {
     "id": "api.command_mute.no_channel.error",
-    "translation": "无法找到指定的频道。请使用[频道识别](https://about.mattermost.com/default-channel-handle-documentation) 以分辨频道。"
+    "translation": "无法找到指定的频道。请使用[频道识别](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) 以分辨频道。"
   },
   {
     "id": "api.command_mute.not_member.error",
@@ -895,7 +887,7 @@
   },
   {
     "id": "api.command_settings.desc",
-    "translation": "打开账户设置对话框"
+    "translation": "打开设定对话框"
   },
   {
     "id": "api.command_settings.name",
@@ -1181,7 +1173,7 @@
   },
   {
     "id": "api.marshal_error",
-    "translation": "编码错误"
+    "translation": "编码失败。"
   },
   {
     "id": "api.oauth.allow_oauth.redirect_callback.app_error",
@@ -1316,16 +1308,8 @@
     "translation": "RootId 参数无效的 ChannelId。"
   },
   {
-    "id": "api.post.create_post.parent_id.app_error",
-    "translation": "无效的 ParentId 参数。"
-  },
-  {
     "id": "api.post.create_post.root_id.app_error",
     "translation": "无效的 RootId 参数。"
-  },
-  {
-    "id": "api.post.create_post.town_square_read_only",
-    "translation": "此频道为只读。只有拥有权限的成员可以发布消息。"
   },
   {
     "id": "api.post.create_webhook_post.creating.app_error",
@@ -1382,10 +1366,6 @@
   {
     "id": "api.post.patch_post.can_not_update_post_in_deleted.error",
     "translation": "无法在已删除的频道更新消息。"
-  },
-  {
-    "id": "api.post.save_is_pinned_post.town_square_read_only",
-    "translation": "此频道为只读。只有拥有权限的成员可以标注或取消标注消息。"
   },
   {
     "id": "api.post.send_notification_and_forget.push_channel_mention",
@@ -1466,10 +1446,6 @@
   {
     "id": "api.reaction.save_reaction.user_id.app_error",
     "translation": "您不能保存其他用户的互动。"
-  },
-  {
-    "id": "api.reaction.town_square_read_only",
-    "translation": "只读频道无法发互动。"
   },
   {
     "id": "api.restricted_system_admin",
@@ -1809,7 +1785,7 @@
   },
   {
     "id": "api.templates.email_footer",
-    "translation": "要更改您的通知偏好设定，登录到您的团队站点后至帐号设置 > 通知。"
+    "translation": "要更改您的通知偏好设定，登录到您的团队站点后并转至设置 > 通知。"
   },
   {
     "id": "api.templates.email_info1",
@@ -2508,10 +2484,6 @@
     "translation": "频道 display_name 不在允许的长度范围内。"
   },
   {
-    "id": "app.import.validate_channel_import_data.display_name_missing.error",
-    "translation": "缺少频道必须属性：display_name"
-  },
-  {
     "id": "app.import.validate_channel_import_data.header_length.error",
     "translation": "频道标题过长。"
   },
@@ -3014,10 +2986,6 @@
   {
     "id": "brand.save_brand_image.save_image.app_error",
     "translation": "无法写入图片文件到您的文件储存。请检查您的连接后再尝试。"
-  },
-  {
-    "id": "cli.license.critical",
-    "translation": "功能需要升级到企业版本并拥有许可证。请联系您的系统管理员。"
   },
   {
     "id": "ent.account_migration.get_all_failed",
@@ -3564,10 +3532,6 @@
     "translation": "无效的用户名。"
   },
   {
-    "id": "model.channel.is_valid.2_or_more.app_error",
-    "translation": "名称必须是2个或更多小写字母数字字符。"
-  },
-  {
     "id": "model.channel.is_valid.create_at.app_error",
     "translation": "创建时间必须为有效的时间。"
   },
@@ -3716,10 +3680,6 @@
     "translation": "无效的命令钩子 id。"
   },
   {
-    "id": "model.command_hook.parent_id.app_error",
-    "translation": "无效的父 id。"
-  },
-  {
     "id": "model.command_hook.root_id.app_error",
     "translation": "无效的根 id。"
   },
@@ -3786,10 +3746,6 @@
   {
     "id": "model.config.is_valid.elastic_search.aggregate_posts_after_days.app_error",
     "translation": "Elasticsearch AggregatePostsAfterDays 设定必须为大于或等于 1 的数字。"
-  },
-  {
-    "id": "model.config.is_valid.elastic_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Elasticsearch 批量索引时间段必须至少 1 秒。"
   },
   {
     "id": "model.config.is_valid.elastic_search.connection_url.app_error",
@@ -4381,7 +4337,7 @@
   },
   {
     "id": "model.post.is_valid.file_ids.app_error",
-    "translation": "无效的文件 id。上传只允许最多 5 个文件。请考虑创建新的消息以上传更多文件。"
+    "translation": "无效的文件 id。上传只允许最多 10 个文件。请考虑创建新的消息以上传更多文件。"
   },
   {
     "id": "model.post.is_valid.filenames.app_error",
@@ -4404,20 +4360,12 @@
     "translation": "无效的原始 id。"
   },
   {
-    "id": "model.post.is_valid.parent_id.app_error",
-    "translation": "无效的父 id。"
-  },
-  {
     "id": "model.post.is_valid.props.app_error",
     "translation": "无效的属性。"
   },
   {
     "id": "model.post.is_valid.root_id.app_error",
     "translation": "无效的根 id。"
-  },
-  {
-    "id": "model.post.is_valid.root_parent.app_error",
-    "translation": "如果父 ID 已设置则必须设置无效根 ID。"
   },
   {
     "id": "model.post.is_valid.type.app_error",
@@ -4654,18 +4602,6 @@
   {
     "id": "plugin_api.send_mail.missing_to",
     "translation": "缺少 TO 地址。"
-  },
-  {
-    "id": "store.sql.convert_string_array",
-    "translation": "来自数据库：不能从 StringArray 转换到 *string"
-  },
-  {
-    "id": "store.sql.convert_string_interface",
-    "translation": "来自数据库：不能从 StringInterface 转换到 *string"
-  },
-  {
-    "id": "store.sql.convert_string_map",
-    "translation": "来自数据库：不能从 StringMap 转换到 *string"
   },
   {
     "id": "store.sql_bot.get.missing.app_error",
@@ -5244,10 +5180,6 @@
     "translation": "解析身份提供商返回的元数据为证书失败。"
   },
   {
-    "id": "api.bot.set_bot_icon_image.array.app_error",
-    "translation": "请求中图片数组为空。"
-  },
-  {
     "id": "api.channel.add_members.error",
     "translation": "添加频道成员时发生错误。"
   },
@@ -5286,10 +5218,6 @@
   {
     "id": "api.file.upload_file.incorrect_channelId.app_error",
     "translation": "无法上传文件。不正确的频道 ID：{{.channelId}}"
-  },
-  {
-    "id": "api.plugin.add_public_key.open.app_error",
-    "translation": "打开公钥文件时遇到错误。"
   },
   {
     "id": "api.plugin.verify_plugin.app_error",
@@ -5436,10 +5364,6 @@
     "translation": "频道搜索无法完成。"
   },
   {
-    "id": "cli.outgoing_webhook.inconsistent_state.app_error",
-    "translation": "传出的 webhook 已删除但因错误而无法创建新的。"
-  },
-  {
     "id": "ent.elasticsearch.create_template_channels_if_not_exists.template_create_failed",
     "translation": "创建 Elasticsearch 频道模板失败"
   },
@@ -5466,10 +5390,6 @@
   {
     "id": "model.channel.is_valid.name.app_error",
     "translation": "无效的频道名。用户 id 不能作为私信以外的频道名。"
-  },
-  {
-    "id": "model.config.is_valid.bleve_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Bleve 批量索引时间段必须至少 1 秒。"
   },
   {
     "id": "model.config.is_valid.bleve_search.enable_autocomplete.app_error",
@@ -5542,34 +5462,6 @@
   {
     "id": "api.bot.create_disabled",
     "translation": "机器人创建已停用。"
-  },
-  {
-    "id": "api.bot.delete_bot_icon_image.app_error",
-    "translation": "无法删除图标。"
-  },
-  {
-    "id": "api.bot.get_bot_icon_image.read.app_error",
-    "translation": "无法读取图标文件。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.app_error",
-    "translation": "无法上传图标。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.no_file.app_error",
-    "translation": "请求中缺失图片文件。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.open.app_error",
-    "translation": "无法打开图片文件。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.parse.app_error",
-    "translation": "无法解析混合表单。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.too_large.app_error",
-    "translation": "无法上传图标。文件太大。"
   },
   {
     "id": "api.bot.teams_channels.add_message_mobile",
@@ -5945,7 +5837,7 @@
   },
   {
     "id": "web.error.unsupported_browser.min_os_version.mac",
-    "translation": "macOS 10.9+"
+    "translation": "macOS 10.14+"
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.safari",
@@ -5953,7 +5845,7 @@
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.firefox",
-    "translation": "版本 60+"
+    "translation": "版本 78+"
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.edge",
@@ -5961,7 +5853,7 @@
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.chrome",
-    "translation": "版本 61+"
+    "translation": "版本 89+"
   },
   {
     "id": "web.error.unsupported_browser.learn_more",
@@ -6372,10 +6264,6 @@
     "translation": "永久删除用户功能未开启。请联系系统管理员。"
   },
   {
-    "id": "app.system.warn_metric.notification.empty_admin_list.app_error",
-    "translation": "管理列表为空。"
-  },
-  {
     "id": "api.templates.warn_metric_ack.body.diagnostic_id_header",
     "translation": "诊断 Id： "
   },
@@ -6390,14 +6278,6 @@
   {
     "id": "api.server.warn_metric.number_of_active_users_200.notification_title",
     "translation": "与 Mattermost 扩展"
-  },
-  {
-    "id": "api.server.warn_metric.contacting_us",
-    "translation": "联系我们"
-  },
-  {
-    "id": "api.server.warn_metric.contact_us",
-    "translation": "联系我们"
   },
   {
     "id": "api.server.warn_metric.bot_response.notification_success.message",
@@ -6880,16 +6760,8 @@
     "translation": "储存 {{.WarnMetricName}} 值失败"
   },
   {
-    "id": "app.system.warn_metric.notification.invalid_metric.app_error",
-    "translation": "未找到指标。"
-  },
-  {
     "id": "app.system.warn_metric.bot_displayname",
     "translation": "Mattermost Advisor"
-  },
-  {
-    "id": "app.system.warn_metric.bot_description",
-    "translation": "[了解更多关于 Mattermost Advisor](https://about.mattermost.com/default-channel-handle-documentation)"
   },
   {
     "id": "app.post.search.app_error",
@@ -7018,10 +6890,6 @@
   {
     "id": "app.channel.permanent_delete_members_by_user.app_error",
     "translation": "无法移除频道成员。"
-  },
-  {
-    "id": "app.channel.increment_mention_count.app_error",
-    "translation": "无法增加提及数。"
   },
   {
     "id": "app.channel.get_public_channels.get.app_error",
@@ -7160,10 +7028,6 @@
     "translation": "如果您有其他的查询，请联络 support@mattermost.com"
   },
   {
-    "id": "api.team.invite_members.limit_reached.app_error",
-    "translation": "您已达到免费套餐的用户数限制"
-  },
-  {
     "id": "api.team.add_team_member.invalid_body.app_error",
     "translation": "无法解析请求内容。"
   },
@@ -7262,14 +7126,6 @@
   {
     "id": "app.team.get_by_scheme.app_error",
     "translation": "无法用提供的方案获取频道。"
-  },
-  {
-    "id": "api.server.warn_metric.starting_trial",
-    "translation": "获取试用"
-  },
-  {
-    "id": "api.server.warn_metric.start_trial",
-    "translation": "开始试用"
   },
   {
     "id": "api.server.warn_metric.number_of_channels_50.contact_us.email_body",
@@ -7624,48 +7480,12 @@
     "translation": "立刻修复"
   },
   {
-    "id": "api.templates.over_limit_suspended_contact_support",
-    "translation": "联系客服"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_title",
-    "translation": "无付款方式"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_subject",
-    "translation": "您的 Mattermost Cloud 订阅的付款已过期"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_info1",
-    "translation": "提醒您，我们尚未收到您在 {{.OverLimitDate}} 开具的 Mattermost 订阅的付款。如果未收到付款，我们将在近期开始冻结您的服务。"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_title",
-    "translation": "未收到付款"
-  },
-  {
     "id": "api.templates.email_us_anytime_at",
     "translation": "随时通过电子邮件发送给我们 "
   },
   {
     "id": "api.templates.copyright",
     "translation": "© 2021 Mattermost, Inc. 530 Lytton Avenue, Second floor, Palo Alto, CA, 94301"
-  },
-  {
-    "id": "api.templates.at_limit_title",
-    "translation": "您已达到免费套餐的用户数限制 "
-  },
-  {
-    "id": "api.templates.at_limit_subject",
-    "translation": "达到 Mattermost Cloud 用户限制"
-  },
-  {
-    "id": "api.templates.at_limit_info2",
-    "translation": "或者，您可以在管理控制台中停用用户释放更多用户的位置或保持在免费用户限制内。"
-  },
-  {
-    "id": "api.templates.at_limit_info1",
-    "translation": "看来您的工作区中现在有10个或更多用户 - 太好了！如果您想邀请更多的团队成员，请考虑立即升级到 Mattermost Cloud Professional。"
   },
   {
     "id": "api.roles.patch_roles.not_allowed_permission.error",
@@ -7824,104 +7644,8 @@
     "translation": "您的金融机构拒绝了与您的 Mattermost Cloud 工作区相关的 {{.CardBrand}} ****{{.LastFour}} 的付款。"
   },
   {
-    "id": "api.templates.over_limit_title",
-    "translation": "您的工作区超出了免费套餐的用户限制"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_title",
-    "translation": "Mattermost Cloud 工作区已被暂停"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_subject",
-    "translation": "您的 Mattermost Cloud 订阅已被暂停"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_info2",
-    "translation": "与我们联系以重新激活您的工作区。"
-  },
-  {
-    "id": "api.templates.over_limit_subject",
-    "translation": "Mattermost Cloud 工作区超出用户限制"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_title",
-    "translation": "Mattermost Cloud 工作区暂停"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_title",
-    "translation": "您的 Mattermost Cloud 工作区计划在明天暂停"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_info1",
-    "translation": "您的 Mattermost 工作区已被暂停。工作区中的所有内容和数据将在 1-3 个月内删除。"
-  },
-  {
-    "id": "api.templates.over_limit_info2",
-    "translation": "或者，您可以在管理控制台中停用用户以腾出更多用户的位置，或保持在免费用户限制以下。"
-  },
-  {
-    "id": "api.templates.over_limit_info1",
-    "translation": "您的工作区中似乎有 10 个以上的用户，这超出了 Mattermost Cloud Professional 的免费层限制。为了避免对您的 Mattermost 工作区造成任何干扰，请升级。"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_subject",
-    "translation": "您的 Mattermost Cloud 订阅即将被暂停"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info4",
-    "translation": "工作区暂停后，工作区中的所有内容和数据将在 1-3 个月内删除。"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info3",
-    "translation": "工作空间暂停后，您将无法登录帐户或更新付款信息。您需要联系我们的支持团队才能重新激活您的服务。"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info2",
-    "translation": "为避免暂停，请添加您的付款信息"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info1",
-    "translation": "这是最后的提醒。我们尚未收到您的 Mattermost Cloud 工作区的付款，该工作区自 {{.OverLimitDate}} 起已经过期。明天我们将暂停您的服务。"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_subject",
-    "translation": "您的 Mattermost Cloud 订阅逾期付款"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_info1",
-    "translation": "Mattermost 无法处理您最近的自动付款。为了保持您的服务有效，请尽快添加付款明细，否则您的服务可能会被暂停。"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_subject",
-    "translation": " 采取行动以保持您的 Mattermost Cloud 订阅"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item3",
-    "translation": "您将无法访问您的消息历史记录"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item2",
-    "translation": "如果不联系我们的支持团队，您将无法更新付款信息"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item1",
-    "translation": "您将无法登录工作区"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2",
-    "translation": "如果不采取任何措施，您的工作区将被暂停"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info1",
-    "translation": "现在仍有时间通过解决付款方式方面的问题来保持 Mattermost Cloud 工作区的活动状态。为避免服务被暂停，请更新您的付款方式。"
-  },
-  {
     "id": "api.system.update_viewed_notices.failed",
     "translation": "更新查看的通知失败"
-  },
-  {
-    "id": "api.templates.upgrade_mattermost_cloud",
-    "translation": "升级"
   },
   {
     "id": "api.config.patch_config.restricted_merge.app_error",
@@ -7977,7 +7701,7 @@
   },
   {
     "id": "app.user.update_thread_follow_for_user.app_error",
-    "translation": "无法更新串的跟随状态"
+    "translation": "无法更新主题的关注状态"
   },
   {
     "id": "app.user.update_failed_pwd_attempts.app_error",
@@ -8316,22 +8040,6 @@
     "translation": "从发现文档检索端点时出错。"
   },
   {
-    "id": "api.templates.upgrade_request_title",
-    "translation": "{{.UserName}} 想邀请成员加入您的工作区"
-  },
-  {
-    "id": "api.templates.upgrade_request_subject",
-    "translation": "Mattermost 用户请求升级工作空间"
-  },
-  {
-    "id": "api.templates.upgrade_request_info4",
-    "translation": "由于您的工作空间已经达到了 Mattermost 云免费版本的用户限制，因此无法发送邀请。立即升级以允许更多用户加入您的工作区。"
-  },
-  {
-    "id": "api.templates.at_limit_info5",
-    "translation": "或者，您可以在系统控制台中禁止以释放用户位数并保持在免费用户限制内。"
-  },
-  {
     "id": "api.export.export_not_found.app_error",
     "translation": "找不到导出文件。"
   },
@@ -8376,20 +8084,8 @@
     "translation": "无效或缺少请求正文。"
   },
   {
-    "id": "api.team.cloud.subscription.error",
-    "translation": "获取云订阅时出错"
-  },
-  {
     "id": "api.post.search_files.invalid_body.app_error",
     "translation": "无法解析请求内容。"
-  },
-  {
-    "id": "api.cloud.get_subscription.error",
-    "translation": "获取云订阅时出错。"
-  },
-  {
-    "id": "api.cloud.get_admins_emails.error",
-    "translation": "获取系统管理员电子邮件时出错。"
   },
   {
     "id": "api.cloud.cws_webhook_event_missing_error",
@@ -8434,14 +8130,6 @@
   {
     "id": "api.templates.verify_body.info1",
     "translation": "如果不是您，则可以放心地忽略此电子邮件。"
-  },
-  {
-    "id": "api.templates.upgrade_request_title2",
-    "translation": "新用户无法加入您的工作区"
-  },
-  {
-    "id": "api.templates.upgrade_request_info4_2",
-    "translation": "最近有人尝试加入您的工作空间，但由于您的工作空间已达到 Mattermost 云免费版本的用户限制，因此无法加入。立即升级，以允许更多用户加入您的工作区。"
   },
   {
     "id": "api.templates.reset_body.subTitle",
@@ -8517,7 +8205,7 @@
   },
   {
     "id": "api.templates.cloud_welcome_email.add_apps_sub_info",
-    "translation": "使用 Github、谷歌日历和 Chrome 等工具简化您的工作。探索我们在我们上的所有集成"
+    "translation": "使用 Github、Jira 以及 Zoom 等工具简化您的工作。探索我们在我们上的所有集成"
   },
   {
     "id": "api.templates.cloud_welcome_email.add_apps_info",
@@ -8534,10 +8222,6 @@
   {
     "id": "ent.elasticsearch.post.get_files_batch_for_indexing.error",
     "translation": "无法批量获取要建立索引的文件。"
-  },
-  {
-    "id": "ent.cloud.subscription.error",
-    "translation": "获取云订阅时出错"
   },
   {
     "id": "app.import.generate_password.app_error",
@@ -8856,14 +8540,6 @@
     "translation": "图像限制检查失败。分辨率过高。"
   },
   {
-    "id": "api.server.warn_metric.support_email_not_configured.start_trial.notification_body",
-    "translation": "请转到**系统控制台 > 站点配置 > 自定义**将 [支持电子邮件](https://docs.mattermost.com/administration/config-settings.html#support-email) 设置为您组织的内部 IT 支持用于最终用户反馈、电子邮件通知以及支持请求的电子邮件地址。"
-  },
-  {
-    "id": "api.server.warn_metric.support_email_not_configured.notification_title",
-    "translation": "设置您的支持电子邮件地址"
-  },
-  {
     "id": "api.server.license_up_for_renewal.error_sending_email",
     "translation": "未能为续订电子邮件发送许可证"
   },
@@ -8937,9 +8613,7 @@
   },
   {
     "id": "api.email_batching.send_batched_email_notification.title",
-    "translation": {
-      "other": "{{ .SenderName }} 和 {{.Count}} 其他人向您发送了新消息"
-    }
+    "translation": "你有新消息"
   },
   {
     "id": "api.email_batching.send_batched_email_notification.time",
@@ -9119,7 +8793,7 @@
   },
   {
     "id": "app.notification.footer.info",
-    "translation": " 并至账户设定 > 通知"
+    "translation": " 并转至设定 > 通知"
   },
   {
     "id": "app.notification.body.mention.title",
@@ -9166,14 +8840,6 @@
     "translation": "字段 '{{.Field}}' 必须通过用户的登录提供商设置。"
   },
   {
-    "id": "api.user.update_active.cloud_at_or_over_limit_check_overcapacity",
-    "translation": "由于云帐户超容，无法激活更多用户。"
-  },
-  {
-    "id": "api.user.update_active.cloud_at_limit_check_error",
-    "translation": "无法检查您的 Mattermost 云实例中的用户数量。"
-  },
-  {
     "id": "api.user.patch_user.login_provider_attribute_set.app_error",
     "translation": "字段 '{{.Field}}' 必须通过用户的登录提供商设置。"
   },
@@ -9211,11 +8877,11 @@
   },
   {
     "id": "api.templates.cloud_trial_ending_email.subtitle",
-    "translation": "{{.Name}}，您对 Mattermost 专业云的 14 天试用将于 3 天后于 {{.TrialEnd}} 结束。请添加您的付款信息，以确保您的团队可以继续享受专业云的好处。"
+    "translation": "{{.Name}}，您的 Mattermost 14 天试用将于 3 天后于 {{.TrialEnd}} 结束。请添加您的付款信息，以确保您的团队可以继续享受 Mattermost 云的好处。"
   },
   {
     "id": "api.templates.cloud_trial_ended_email.subtitle",
-    "translation": "{{.Name}}，您的 Mattermost 专业云 14 天免费试用已于今天结束，{{.TodayDate}}。请添加您的付款信息，以确保您的团队可以继续享受专业云的好处。"
+    "translation": "{{.Name}}，您的 Mattermost 企业云 14 天免费试用已于今天结束，{{.TodayDate}}。请添加您的付款信息，以确保您的团队可以继续享受企业云的好处。"
   },
   {
     "id": "api.license.upgrade_needed.app_error",
@@ -9223,10 +8889,146 @@
   },
   {
     "id": "api.templates.cloud_welcome_email.signin_sub_info2",
-    "translation": "登入工作区以在 PC、Mac、iOS 和 Android 上获得最好体验。"
+    "translation": "登入工作区以在 Windows、Linux、Mac、iOS 以及 Android 上获得最好体验。"
   },
   {
     "id": "api.templates.cloud_welcome_email.signin_sub_info",
     "translation": "在我们的"
+  },
+  {
+    "id": "app.user.store_is_empty.app_error",
+    "translation": "检查用户储存是否为空失败。"
+  },
+  {
+    "id": "app.notification.body.thread.title",
+    "translation": "{{.SenderName}}回复了主题"
+  },
+  {
+    "id": "api.post.send_notification_and_forget.push_comment_on_crt_thread",
+    "translation": " 回复了您关注的主题。"
+  },
+  {
+    "id": "api.push_notification.title.collapsed_threads",
+    "translation": "在{{.channelName}}回复"
+  },
+  {
+    "id": "api.push_notification.title.collapsed_threads_dm",
+    "translation": "在私信中回复"
+  },
+  {
+    "id": "api.post.send_notification_and_forget.push_comment_on_crt_thread_dm",
+    "translation": " 回复了主题。"
+  },
+  {
+    "id": "api.config.reload_config.app_error",
+    "translation": "重加载配置失败。"
+  },
+  {
+    "id": "model.config.is_valid.collapsed_threads.autofollow.app_error",
+    "translation": "ThreadAutoFollow 必须为 true 才能启用 CollapsedThreads"
+  },
+  {
+    "id": "app.post.marshal.app_error",
+    "translation": "编码消息失败。"
+  },
+  {
+    "id": "app.notification.body.thread_gm.subTitle",
+    "translation": "当您不在时，{{.SenderName}} 回复了您群组中的一个主题。"
+  },
+  {
+    "id": "app.notification.body.thread_dm.subTitle",
+    "translation": "当您不在时，{{.SenderName}} 回复了您的私信。"
+  },
+  {
+    "id": "app.notification.body.thread_channel_full.subTitle",
+    "translation": "当您不在时，{{.SenderName}} 在 {{.ChannelName}} 回复了您关注的话题。"
+  },
+  {
+    "id": "app.notification.body.thread_channel.subTitle",
+    "translation": "当您不在时，{{.SenderName}} 回复了您关注的话题。"
+  },
+  {
+    "id": "app.import.bulk_import.process_attachments.error",
+    "translation": "处理批量导入附件时出错。"
+  },
+  {
+    "id": "api.unmarshal_error",
+    "translation": "解码失败。"
+  },
+  {
+    "id": "model.user.is_valid.roles_limit.app_error",
+    "translation": "无效的用户角色，超过 {{.Limit}} 个字符。"
+  },
+  {
+    "id": "model.team_member.is_valid.roles_limit.app_error",
+    "translation": "无效的团队成员角色，超过 {{.Limit}} 个字符。"
+  },
+  {
+    "id": "model.session.is_valid.user_id.app_error",
+    "translation": "无效的会话 UserId 字段。"
+  },
+  {
+    "id": "model.session.is_valid.roles_limit.app_error",
+    "translation": "无效的会话角色，超过 {{.Limit}} 个字符。"
+  },
+  {
+    "id": "model.session.is_valid.id.app_error",
+    "translation": "无效的会话 Id 字段。"
+  },
+  {
+    "id": "model.session.is_valid.create_at.app_error",
+    "translation": "无效的会话 CreateAt 字段。"
+  },
+  {
+    "id": "model.channel_member.is_valid.roles_limit.app_error",
+    "translation": "无效频道成员角色，长度超过 {{.Limit}} 个字符的。"
+  },
+  {
+    "id": "api.user.create_user.bad_token_email_data.app_error",
+    "translation": "令牌中的电子邮件与用户数据中的电子邮件不一致。"
+  },
+  {
+    "id": "ent.elasticsearch.getAllTeamMembers.error",
+    "translation": "获取所有团队成员失败"
+  },
+  {
+    "id": "ent.elasticsearch.getAllChannelMembers.error",
+    "translation": "获取所有频道成员失败"
+  },
+  {
+    "id": "api.post.posts_by_ids.invalid_body.request_error",
+    "translation": "收到的 Post ID 数量已超过 {{.MaxLength}} 的最大大小"
+  },
+  {
+    "id": "app.user.get_thread_count_for_user.app_error",
+    "translation": "无法获取用户的主题数。"
+  },
+  {
+    "id": "app.session.extend_session_expiry.app_error",
+    "translation": "无法延长会话"
+  },
+  {
+    "id": "app.role.get_all.app_error",
+    "translation": "无法获取所有角色。"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_users_in_channel.app_error",
+    "translation": "无法从已归档频道的获取帖子"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_posts_for_channel.app_error",
+    "translation": "无法从已归档频道的获取帖子"
+  },
+  {
+    "id": "api.templates.invite_body.title.reminder",
+    "translation": "提醒"
+  },
+  {
+    "id": "api.license.request_renewal_link.cannot_renew_on_cws",
+    "translation": "无法在门户上续订此许可证"
+  },
+  {
+    "id": "api.custom_status.set_custom_statuses.update.app_error",
+    "translation": "未能更新自定义状态。 请添加表情符或自定义文本。"
   }
 ]

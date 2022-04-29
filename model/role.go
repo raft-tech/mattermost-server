@@ -4,8 +4,7 @@
 package model
 
 import (
-	"encoding/json"
-	"io"
+	"fmt"
 	"strings"
 )
 
@@ -43,6 +42,13 @@ func init() {
 		ChannelGuestRoleId,
 		ChannelUserRoleId,
 		ChannelAdminRoleId,
+
+		CustomGroupUserRoleId,
+
+		PlaybookAdminRoleId,
+		PlaybookMemberRoleId,
+		RunAdminRoleId,
+		RunMemberRoleId,
 	}, NewSystemRoleIDs...)
 
 	// When updating the values here, the values in mattermost-redux must also be updated.
@@ -73,7 +79,7 @@ func init() {
 			PermissionReadElasticsearchPostAggregationJob,
 		},
 		PermissionSysconsoleWriteEnvironmentWebServer.Id: {
-			PermissionTestSiteUrl,
+			PermissionTestSiteURL,
 			PermissionReloadConfig,
 			PermissionInvalidateCaches,
 		},
@@ -89,7 +95,7 @@ func init() {
 		PermissionSysconsoleWriteEnvironmentFileStorage.Id: {
 			PermissionTestS3,
 		},
-		PermissionSysconsoleWriteEnvironmentSmtp.Id: {
+		PermissionSysconsoleWriteEnvironmentSMTP.Id: {
 			PermissionTestEmail,
 		},
 		PermissionSysconsoleReadReportingServerLogs.Id: {
@@ -216,7 +222,7 @@ func init() {
 		PermissionSysconsoleReadEnvironmentElasticsearch.Id,
 		PermissionSysconsoleReadEnvironmentFileStorage.Id,
 		PermissionSysconsoleReadEnvironmentImageProxy.Id,
-		PermissionSysconsoleReadEnvironmentSmtp.Id,
+		PermissionSysconsoleReadEnvironmentSMTP.Id,
 		PermissionSysconsoleReadEnvironmentPushNotificationServer.Id,
 		PermissionSysconsoleReadEnvironmentHighAvailability.Id,
 		PermissionSysconsoleReadEnvironmentRateLimiting.Id,
@@ -274,7 +280,7 @@ func init() {
 		PermissionSysconsoleReadEnvironmentElasticsearch.Id,
 		PermissionSysconsoleReadEnvironmentFileStorage.Id,
 		PermissionSysconsoleReadEnvironmentImageProxy.Id,
-		PermissionSysconsoleReadEnvironmentSmtp.Id,
+		PermissionSysconsoleReadEnvironmentSMTP.Id,
 		PermissionSysconsoleReadEnvironmentPushNotificationServer.Id,
 		PermissionSysconsoleReadEnvironmentHighAvailability.Id,
 		PermissionSysconsoleReadEnvironmentRateLimiting.Id,
@@ -287,7 +293,7 @@ func init() {
 		PermissionSysconsoleWriteEnvironmentElasticsearch.Id,
 		PermissionSysconsoleWriteEnvironmentFileStorage.Id,
 		PermissionSysconsoleWriteEnvironmentImageProxy.Id,
-		PermissionSysconsoleWriteEnvironmentSmtp.Id,
+		PermissionSysconsoleWriteEnvironmentSMTP.Id,
 		PermissionSysconsoleWriteEnvironmentPushNotificationServer.Id,
 		PermissionSysconsoleWriteEnvironmentHighAvailability.Id,
 		PermissionSysconsoleWriteEnvironmentRateLimiting.Id,
@@ -364,6 +370,13 @@ const (
 	ChannelUserRoleId  = "channel_user"
 	ChannelAdminRoleId = "channel_admin"
 
+	CustomGroupUserRoleId = "custom_group_user"
+
+	PlaybookAdminRoleId  = "playbook_admin"
+	PlaybookMemberRoleId = "playbook_member"
+	RunAdminRoleId       = "run_admin"
+	RunMemberRoleId      = "run_member"
+
 	RoleNameMaxLength        = 64
 	RoleDisplayNameMaxLength = 128
 	RoleDescriptionMaxLength = 1024
@@ -371,6 +384,7 @@ const (
 	RoleScopeSystem  RoleScope = "System"
 	RoleScopeTeam    RoleScope = "Team"
 	RoleScopeChannel RoleScope = "Channel"
+	RoleScopeGroup   RoleScope = "Group"
 
 	RoleTypeGuest RoleType = "Guest"
 	RoleTypeUser  RoleType = "User"
@@ -397,39 +411,6 @@ type RolePatch struct {
 type RolePermissions struct {
 	RoleID      string
 	Permissions []string
-}
-
-func (r *Role) ToJson() string {
-	b, _ := json.Marshal(r)
-	return string(b)
-}
-
-func RoleFromJson(data io.Reader) *Role {
-	var r *Role
-	json.NewDecoder(data).Decode(&r)
-	return r
-}
-
-func RoleListToJson(r []*Role) string {
-	b, _ := json.Marshal(r)
-	return string(b)
-}
-
-func RoleListFromJson(data io.Reader) []*Role {
-	var roles []*Role
-	json.NewDecoder(data).Decode(&roles)
-	return roles
-}
-
-func (r *RolePatch) ToJson() string {
-	b, _ := json.Marshal(r)
-	return string(b)
-}
-
-func RolePatchFromJson(data io.Reader) *RolePatch {
-	var rolePatch *RolePatch
-	json.NewDecoder(data).Decode(&rolePatch)
-	return rolePatch
 }
 
 func (r *Role) Patch(patch *RolePatch) {
@@ -583,7 +564,7 @@ func (r *Role) GetChannelModeratedPermissions(channelType ChannelType) map[strin
 	return moderatedPermissions
 }
 
-// RolePatchFromChannelModerationsPatch Creates and returns a RolePatch based on a slice of ChannelModerationPatchs, roleName is expected to be either "members" or "guests".
+// RolePatchFromChannelModerationsPatch Creates and returns a RolePatch based on a slice of ChannelModerationPatches, roleName is expected to be either "members" or "guests".
 func (r *Role) RolePatchFromChannelModerationsPatch(channelModerationsPatch []*ChannelModerationPatch, roleName string) *RolePatch {
 	permissionsToAddToPatch := make(map[string]bool)
 
@@ -708,6 +689,13 @@ func IsValidRoleName(roleName string) bool {
 func MakeDefaultRoles() map[string]*Role {
 	roles := make(map[string]*Role)
 
+	roles[CustomGroupUserRoleId] = &Role{
+		Name:        CustomGroupUserRoleId,
+		DisplayName: fmt.Sprintf("authentication.roles.%s.name", CustomGroupUserRoleId),
+		Description: fmt.Sprintf("authentication.roles.%s.description", CustomGroupUserRoleId),
+		Permissions: []string{},
+	}
+
 	roles[ChannelGuestRoleId] = &Role{
 		Name:        "channel_guest",
 		DisplayName: "authentication.roles.channel_guest.name",
@@ -740,6 +728,13 @@ func MakeDefaultRoles() map[string]*Role {
 			PermissionCreatePost.Id,
 			PermissionUseChannelMentions.Id,
 			PermissionUseSlashCommands.Id,
+			PermissionManagePublicChannelProperties.Id,
+			PermissionDeletePublicChannel.Id,
+			PermissionManagePrivateChannelProperties.Id,
+			PermissionDeletePrivateChannel.Id,
+			PermissionManagePrivateChannelMembers.Id,
+			PermissionDeletePost.Id,
+			PermissionEditPost.Id,
 		},
 		SchemeManaged: true,
 		BuiltIn:       true,
@@ -777,6 +772,10 @@ func MakeDefaultRoles() map[string]*Role {
 			PermissionJoinPublicChannels.Id,
 			PermissionReadPublicChannel.Id,
 			PermissionViewTeam.Id,
+			PermissionCreatePublicChannel.Id,
+			PermissionCreatePrivateChannel.Id,
+			PermissionInviteUser.Id,
+			PermissionAddUserToTeam.Id,
 		},
 		SchemeManaged: true,
 		BuiltIn:       true,
@@ -824,6 +823,65 @@ func MakeDefaultRoles() map[string]*Role {
 			PermissionManageOutgoingWebhooks.Id,
 			PermissionConvertPublicChannelToPrivate.Id,
 			PermissionConvertPrivateChannelToPublic.Id,
+			PermissionDeletePost.Id,
+			PermissionDeleteOthersPosts.Id,
+		},
+		SchemeManaged: true,
+		BuiltIn:       true,
+	}
+
+	roles[PlaybookAdminRoleId] = &Role{
+		Name:        PlaybookAdminRoleId,
+		DisplayName: "authentication.roles.playbook_admin.name",
+		Description: "authentication.roles.playbook_admin.description",
+		Permissions: []string{
+			PermissionPublicPlaybookManageMembers.Id,
+			PermissionPublicPlaybookManageRoles.Id,
+			PermissionPublicPlaybookManageProperties.Id,
+			PermissionPrivatePlaybookManageMembers.Id,
+			PermissionPrivatePlaybookManageRoles.Id,
+			PermissionPrivatePlaybookManageProperties.Id,
+			PermissionPublicPlaybookMakePrivate.Id,
+		},
+		SchemeManaged: true,
+		BuiltIn:       true,
+	}
+
+	roles[PlaybookMemberRoleId] = &Role{
+		Name:        PlaybookMemberRoleId,
+		DisplayName: "authentication.roles.playbook_member.name",
+		Description: "authentication.roles.playbook_member.description",
+		Permissions: []string{
+			PermissionPublicPlaybookView.Id,
+			PermissionPublicPlaybookManageMembers.Id,
+			PermissionPublicPlaybookManageProperties.Id,
+			PermissionPrivatePlaybookView.Id,
+			PermissionPrivatePlaybookManageMembers.Id,
+			PermissionPrivatePlaybookManageProperties.Id,
+			PermissionRunCreate.Id,
+		},
+		SchemeManaged: true,
+		BuiltIn:       true,
+	}
+
+	roles[RunAdminRoleId] = &Role{
+		Name:        RunAdminRoleId,
+		DisplayName: "authentication.roles.run_admin.name",
+		Description: "authentication.roles.run_admin.description",
+		Permissions: []string{
+			PermissionRunManageMembers.Id,
+			PermissionRunManageProperties.Id,
+		},
+		SchemeManaged: true,
+		BuiltIn:       true,
+	}
+
+	roles[RunMemberRoleId] = &Role{
+		Name:        RunMemberRoleId,
+		DisplayName: "authentication.roles.run_member.name",
+		Description: "authentication.roles.run_member.description",
+		Permissions: []string{
+			PermissionRunView.Id,
 		},
 		SchemeManaged: true,
 		BuiltIn:       true,
@@ -851,6 +909,11 @@ func MakeDefaultRoles() map[string]*Role {
 			PermissionCreateDirectChannel.Id,
 			PermissionCreateGroupChannel.Id,
 			PermissionViewMembers.Id,
+			PermissionCreateTeam.Id,
+			PermissionCreateCustomGroup.Id,
+			PermissionEditCustomGroup.Id,
+			PermissionDeleteCustomGroup.Id,
+			PermissionManageCustomGroupMembers.Id,
 		},
 		SchemeManaged: true,
 		BuiltIn:       true,

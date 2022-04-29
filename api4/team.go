@@ -33,53 +33,53 @@ func init() {
 }
 
 func (api *API) InitTeam() {
-	api.BaseRoutes.Teams.Handle("", api.ApiSessionRequired(createTeam)).Methods("POST")
-	api.BaseRoutes.Teams.Handle("", api.ApiSessionRequired(getAllTeams)).Methods("GET")
-	api.BaseRoutes.Teams.Handle("/{team_id:[A-Za-z0-9]+}/scheme", api.ApiSessionRequired(updateTeamScheme)).Methods("PUT")
-	api.BaseRoutes.Teams.Handle("/search", api.ApiSessionRequiredDisableWhenBusy(searchTeams)).Methods("POST")
-	api.BaseRoutes.TeamsForUser.Handle("", api.ApiSessionRequired(getTeamsForUser)).Methods("GET")
-	api.BaseRoutes.TeamsForUser.Handle("/unread", api.ApiSessionRequired(getTeamsUnreadForUser)).Methods("GET")
+	api.BaseRoutes.Teams.Handle("", api.APISessionRequired(createTeam)).Methods("POST")
+	api.BaseRoutes.Teams.Handle("", api.APISessionRequired(getAllTeams)).Methods("GET")
+	api.BaseRoutes.Teams.Handle("/{team_id:[A-Za-z0-9]+}/scheme", api.APISessionRequired(updateTeamScheme)).Methods("PUT")
+	api.BaseRoutes.Teams.Handle("/search", api.APISessionRequiredDisableWhenBusy(searchTeams)).Methods("POST")
+	api.BaseRoutes.TeamsForUser.Handle("", api.APISessionRequired(getTeamsForUser)).Methods("GET")
+	api.BaseRoutes.TeamsForUser.Handle("/unread", api.APISessionRequired(getTeamsUnreadForUser)).Methods("GET")
 
-	api.BaseRoutes.Team.Handle("", api.ApiSessionRequired(getTeam)).Methods("GET")
-	api.BaseRoutes.Team.Handle("", api.ApiSessionRequired(updateTeam)).Methods("PUT")
-	api.BaseRoutes.Team.Handle("", api.ApiSessionRequired(deleteTeam)).Methods("DELETE")
-	api.BaseRoutes.Team.Handle("/patch", api.ApiSessionRequired(patchTeam)).Methods("PUT")
-	api.BaseRoutes.Team.Handle("/restore", api.ApiSessionRequired(restoreTeam)).Methods("POST")
-	api.BaseRoutes.Team.Handle("/privacy", api.ApiSessionRequired(updateTeamPrivacy)).Methods("PUT")
-	api.BaseRoutes.Team.Handle("/stats", api.ApiSessionRequired(getTeamStats)).Methods("GET")
-	api.BaseRoutes.Team.Handle("/regenerate_invite_id", api.ApiSessionRequired(regenerateTeamInviteId)).Methods("POST")
+	api.BaseRoutes.Team.Handle("", api.APISessionRequired(getTeam)).Methods("GET")
+	api.BaseRoutes.Team.Handle("", api.APISessionRequired(updateTeam)).Methods("PUT")
+	api.BaseRoutes.Team.Handle("", api.APISessionRequired(deleteTeam)).Methods("DELETE")
+	api.BaseRoutes.Team.Handle("/patch", api.APISessionRequired(patchTeam)).Methods("PUT")
+	api.BaseRoutes.Team.Handle("/restore", api.APISessionRequired(restoreTeam)).Methods("POST")
+	api.BaseRoutes.Team.Handle("/privacy", api.APISessionRequired(updateTeamPrivacy)).Methods("PUT")
+	api.BaseRoutes.Team.Handle("/stats", api.APISessionRequired(getTeamStats)).Methods("GET")
+	api.BaseRoutes.Team.Handle("/regenerate_invite_id", api.APISessionRequired(regenerateTeamInviteId)).Methods("POST")
 
-	api.BaseRoutes.Team.Handle("/image", api.ApiSessionRequiredTrustRequester(getTeamIcon)).Methods("GET")
-	api.BaseRoutes.Team.Handle("/image", api.ApiSessionRequired(setTeamIcon)).Methods("POST")
-	api.BaseRoutes.Team.Handle("/image", api.ApiSessionRequired(removeTeamIcon)).Methods("DELETE")
+	api.BaseRoutes.Team.Handle("/image", api.APISessionRequiredTrustRequester(getTeamIcon)).Methods("GET")
+	api.BaseRoutes.Team.Handle("/image", api.APISessionRequired(setTeamIcon)).Methods("POST")
+	api.BaseRoutes.Team.Handle("/image", api.APISessionRequired(removeTeamIcon)).Methods("DELETE")
 
-	api.BaseRoutes.TeamMembers.Handle("", api.ApiSessionRequired(getTeamMembers)).Methods("GET")
-	api.BaseRoutes.TeamMembers.Handle("/ids", api.ApiSessionRequired(getTeamMembersByIds)).Methods("POST")
-	api.BaseRoutes.TeamMembersForUser.Handle("", api.ApiSessionRequired(getTeamMembersForUser)).Methods("GET")
-	api.BaseRoutes.TeamMembers.Handle("", api.ApiSessionRequired(addTeamMember)).Methods("POST")
-	api.BaseRoutes.Teams.Handle("/members/invite", api.ApiSessionRequired(addUserToTeamFromInvite)).Methods("POST")
-	api.BaseRoutes.TeamMembers.Handle("/batch", api.ApiSessionRequired(addTeamMembers)).Methods("POST")
-	api.BaseRoutes.TeamMember.Handle("", api.ApiSessionRequired(removeTeamMember)).Methods("DELETE")
+	api.BaseRoutes.TeamMembers.Handle("", api.APISessionRequired(getTeamMembers)).Methods("GET")
+	api.BaseRoutes.TeamMembers.Handle("/ids", api.APISessionRequired(getTeamMembersByIds)).Methods("POST")
+	api.BaseRoutes.TeamMembersForUser.Handle("", api.APISessionRequired(getTeamMembersForUser)).Methods("GET")
+	api.BaseRoutes.TeamMembers.Handle("", api.APISessionRequired(addTeamMember)).Methods("POST")
+	api.BaseRoutes.Teams.Handle("/members/invite", api.APISessionRequired(addUserToTeamFromInvite)).Methods("POST")
+	api.BaseRoutes.TeamMembers.Handle("/batch", api.APISessionRequired(addTeamMembers)).Methods("POST")
+	api.BaseRoutes.TeamMember.Handle("", api.APISessionRequired(removeTeamMember)).Methods("DELETE")
 
-	api.BaseRoutes.TeamForUser.Handle("/unread", api.ApiSessionRequired(getTeamUnread)).Methods("GET")
+	api.BaseRoutes.TeamForUser.Handle("/unread", api.APISessionRequired(getTeamUnread)).Methods("GET")
 
-	api.BaseRoutes.TeamByName.Handle("", api.ApiSessionRequired(getTeamByName)).Methods("GET")
-	api.BaseRoutes.TeamMember.Handle("", api.ApiSessionRequired(getTeamMember)).Methods("GET")
-	api.BaseRoutes.TeamByName.Handle("/exists", api.ApiSessionRequired(teamExists)).Methods("GET")
-	api.BaseRoutes.TeamMember.Handle("/roles", api.ApiSessionRequired(updateTeamMemberRoles)).Methods("PUT")
-	api.BaseRoutes.TeamMember.Handle("/schemeRoles", api.ApiSessionRequired(updateTeamMemberSchemeRoles)).Methods("PUT")
-	api.BaseRoutes.Team.Handle("/import", api.ApiSessionRequired(importTeam)).Methods("POST")
-	api.BaseRoutes.Team.Handle("/invite/email", api.ApiSessionRequired(inviteUsersToTeam)).Methods("POST")
-	api.BaseRoutes.Team.Handle("/invite-guests/email", api.ApiSessionRequired(inviteGuestsToChannels)).Methods("POST")
-	api.BaseRoutes.Teams.Handle("/invites/email", api.ApiSessionRequired(invalidateAllEmailInvites)).Methods("DELETE")
-	api.BaseRoutes.Teams.Handle("/invite/{invite_id:[A-Za-z0-9]+}", api.ApiHandler(getInviteInfo)).Methods("GET")
+	api.BaseRoutes.TeamByName.Handle("", api.APISessionRequired(getTeamByName)).Methods("GET")
+	api.BaseRoutes.TeamMember.Handle("", api.APISessionRequired(getTeamMember)).Methods("GET")
+	api.BaseRoutes.TeamByName.Handle("/exists", api.APISessionRequired(teamExists)).Methods("GET")
+	api.BaseRoutes.TeamMember.Handle("/roles", api.APISessionRequired(updateTeamMemberRoles)).Methods("PUT")
+	api.BaseRoutes.TeamMember.Handle("/schemeRoles", api.APISessionRequired(updateTeamMemberSchemeRoles)).Methods("PUT")
+	api.BaseRoutes.Team.Handle("/import", api.APISessionRequired(importTeam)).Methods("POST")
+	api.BaseRoutes.Team.Handle("/invite/email", api.APISessionRequired(inviteUsersToTeam)).Methods("POST")
+	api.BaseRoutes.Team.Handle("/invite-guests/email", api.APISessionRequired(inviteGuestsToChannels)).Methods("POST")
+	api.BaseRoutes.Teams.Handle("/invites/email", api.APISessionRequired(invalidateAllEmailInvites)).Methods("DELETE")
+	api.BaseRoutes.Teams.Handle("/invite/{invite_id:[A-Za-z0-9]+}", api.APIHandler(getInviteInfo)).Methods("GET")
 
-	api.BaseRoutes.Teams.Handle("/{team_id:[A-Za-z0-9]+}/members_minus_group_members", api.ApiSessionRequired(teamMembersMinusGroupMembers)).Methods("GET")
+	api.BaseRoutes.Teams.Handle("/{team_id:[A-Za-z0-9]+}/members_minus_group_members", api.APISessionRequired(teamMembersMinusGroupMembers)).Methods("GET")
 }
 
 func createTeam(c *Context, w http.ResponseWriter, r *http.Request) {
-	team := model.TeamFromJson(r.Body)
-	if team == nil {
+	var team model.Team
+	if jsonErr := json.NewDecoder(r.Body).Decode(&team); jsonErr != nil {
 		c.SetInvalidParam("team")
 		return
 	}
@@ -94,7 +94,7 @@ func createTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rteam, err := c.App.CreateTeamWithUser(c.AppContext, team, c.AppContext.Session().UserId)
+	rteam, err := c.App.CreateTeamWithUser(c.AppContext, &team, c.AppContext.Session().UserId)
 	if err != nil {
 		c.Err = err
 		return
@@ -163,12 +163,12 @@ func updateTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team := model.TeamFromJson(r.Body)
-
-	if team == nil {
+	var team model.Team
+	if jsonErr := json.NewDecoder(r.Body).Decode(&team); jsonErr != nil {
 		c.SetInvalidParam("team")
 		return
 	}
+
 	team.Email = strings.ToLower(team.Email)
 
 	// The team being updated in the payload must be the same one as indicated in the URL.
@@ -186,7 +186,7 @@ func updateTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedTeam, err := c.App.UpdateTeam(team)
+	updatedTeam, err := c.App.UpdateTeam(&team)
 	if err != nil {
 		c.Err = err
 		return
@@ -207,9 +207,8 @@ func patchTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team := model.TeamPatchFromJson(r.Body)
-
-	if team == nil {
+	var team model.TeamPatch
+	if jsonErr := json.NewDecoder(r.Body).Decode(&team); jsonErr != nil {
 		c.SetInvalidParam("team")
 		return
 	}
@@ -226,7 +225,7 @@ func patchTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		auditRec.AddMeta("team", oldTeam)
 	}
 
-	patchedTeam, err := c.App.PatchTeam(c.Params.TeamId, team)
+	patchedTeam, err := c.App.PatchTeam(c.Params.TeamId, &team)
 
 	if err != nil {
 		c.Err = err
@@ -286,7 +285,7 @@ func updateTeamPrivacy(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	props := model.StringInterfaceFromJson(r.Body)
+	props := model.StringInterfaceFromJSON(r.Body)
 	privacy, ok := props["privacy"].(string)
 	if !ok {
 		c.SetInvalidParam("privacy")
@@ -421,7 +420,13 @@ func getTeamsForUser(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.App.SanitizeTeams(*c.AppContext.Session(), teams)
-	w.Write([]byte(model.TeamListToJson(teams)))
+
+	js, jsonErr := json.Marshal(teams)
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getTeamsForUser", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
 }
 
 func getTeamsUnreadForUser(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -445,7 +450,12 @@ func getTeamsUnreadForUser(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(model.TeamsUnreadToJson(unreadTeamsList)))
+	js, jsonErr := json.Marshal(unreadTeamsList)
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getTeamsUnreadForUser", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
 }
 
 func getTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -514,7 +524,12 @@ func getTeamMembers(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(model.TeamMembersToJson(members)))
+	js, jsonErr := json.Marshal(members)
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getTeamMembers", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
 }
 
 func getTeamMembersForUser(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -545,7 +560,12 @@ func getTeamMembersForUser(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(model.TeamMembersToJson(members)))
+	js, jsonErr := json.Marshal(members)
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getTeamMembersForUser", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
 }
 
 func getTeamMembersByIds(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -554,7 +574,7 @@ func getTeamMembersByIds(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIds := model.ArrayFromJson(r.Body)
+	userIds := model.ArrayFromJSON(r.Body)
 
 	if len(userIds) == 0 {
 		c.SetInvalidParam("user_ids")
@@ -578,7 +598,12 @@ func getTeamMembersByIds(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(model.TeamMembersToJson(members)))
+	js, jsonErr := json.Marshal(members)
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getTeamMembersByIds", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
 }
 
 func addTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -588,9 +613,9 @@ func addTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err *model.AppError
-	member := model.TeamMemberFromJson(r.Body)
-	if member == nil {
-		c.Err = model.NewAppError("addTeamMember", "api.team.add_team_member.invalid_body.app_error", nil, "Error in model.TeamMemberFromJson()", http.StatusBadRequest)
+	var member model.TeamMember
+	if jsonErr := json.NewDecoder(r.Body).Decode(&member); jsonErr != nil {
+		c.Err = model.NewAppError("addTeamMember", "api.team.add_team_member.invalid_body.app_error", nil, "Error in model.TeamMemberFromJSON()", http.StatusBadRequest)
 		return
 	}
 	if member.TeamId != c.Params.TeamId {
@@ -653,8 +678,8 @@ func addTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	member, err = c.App.AddTeamMember(c.AppContext, member.TeamId, member.UserId)
-
+	var tm *model.TeamMember
+	tm, err = c.App.AddTeamMember(c.AppContext, member.TeamId, member.UserId)
 	if err != nil {
 		c.Err = err
 		return
@@ -663,7 +688,7 @@ func addTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec.Success()
 
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(member); err != nil {
+	if err := json.NewEncoder(w).Encode(tm); err != nil {
 		mlog.Warn("Error while writing response", mlog.Err(err))
 	}
 }
@@ -717,7 +742,11 @@ func addTeamMembers(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err *model.AppError
-	members := model.TeamMembersFromJson(r.Body)
+	var members []*model.TeamMember
+	if jsonErr := json.NewDecoder(r.Body).Decode(&members); jsonErr != nil {
+		c.SetInvalidParam("members")
+		return
+	}
 
 	if len(members) > MaxAddMembersBatch {
 		c.SetInvalidParam("too many members in batch")
@@ -798,17 +827,23 @@ func addTeamMembers(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var js []byte
+	var jsonErr error
+	if graceful {
+		// in 'graceful' mode we allow a different return value, notifying the client which users were not added
+		js, jsonErr = json.Marshal(membersWithErrors)
+	} else {
+		js, jsonErr = json.Marshal(model.TeamMembersWithErrorToTeamMembers(membersWithErrors))
+	}
+	if jsonErr != nil {
+		c.Err = model.NewAppError("addTeamMembers", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	auditRec.Success()
 
 	w.WriteHeader(http.StatusCreated)
-
-	if graceful {
-		// in 'graceful' mode we allow a different return value, notifying the client which users were not added
-		w.Write([]byte(model.TeamMembersWithErrorToJson(membersWithErrors)))
-	} else {
-		w.Write([]byte(model.TeamMembersToJson(model.TeamMembersWithErrorToTeamMembers(membersWithErrors))))
-	}
-
+	w.Write(js)
 }
 
 func removeTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -916,7 +951,7 @@ func updateTeamMemberRoles(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	props := model.MapFromJson(r.Body)
+	props := model.MapFromJSON(r.Body)
 
 	newRoles := props["roles"]
 	if !model.IsValidUserRoles(newRoles) {
@@ -951,8 +986,8 @@ func updateTeamMemberSchemeRoles(c *Context, w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	schemeRoles := model.SchemeRolesFromJson(r.Body)
-	if schemeRoles == nil {
+	var schemeRoles model.SchemeRoles
+	if jsonErr := json.NewDecoder(r.Body).Decode(&schemeRoles); jsonErr != nil {
 		c.SetInvalidParam("scheme_roles")
 		return
 	}
@@ -1020,22 +1055,26 @@ func getAllTeams(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.App.SanitizeTeams(*c.AppContext.Session(), teams)
-
-	var resBody []byte
-
+	var js []byte
+	var jsonErr error
 	if c.Params.IncludeTotalCount {
-		resBody = model.TeamsWithCountToJson(teamsWithCount)
+		c.App.SanitizeTeams(*c.AppContext.Session(), teamsWithCount.Teams)
+		js, jsonErr = json.Marshal(teamsWithCount)
 	} else {
-		resBody = model.ToJson(teams)
+		c.App.SanitizeTeams(*c.AppContext.Session(), teams)
+		js, jsonErr = json.Marshal(teams)
+	}
+	if jsonErr != nil {
+		c.Err = model.NewAppError("getAllTeams", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	w.Write(resBody)
+	w.Write(js)
 }
 
 func searchTeams(c *Context, w http.ResponseWriter, r *http.Request) {
-	props := model.TeamSearchFromJson(r.Body)
-	if props == nil {
+	var props model.TeamSearch
+	if jsonErr := json.NewDecoder(r.Body).Decode(&props); jsonErr != nil {
 		c.SetInvalidParam("team_search")
 		return
 	}
@@ -1055,19 +1094,19 @@ func searchTeams(c *Context, w http.ResponseWriter, r *http.Request) {
 	var err *model.AppError
 
 	if c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionListPrivateTeams) && c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionListPublicTeams) {
-		teams, totalCount, err = c.App.SearchAllTeams(props)
+		teams, totalCount, err = c.App.SearchAllTeams(&props)
 	} else if c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionListPrivateTeams) {
 		if props.Page != nil || props.PerPage != nil {
 			c.Err = model.NewAppError("searchTeams", "api.team.search_teams.pagination_not_implemented.private_team_search", nil, "", http.StatusNotImplemented)
 			return
 		}
-		teams, err = c.App.SearchPrivateTeams(props)
+		teams, err = c.App.SearchPrivateTeams(&props)
 	} else if c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionListPublicTeams) {
 		if props.Page != nil || props.PerPage != nil {
 			c.Err = model.NewAppError("searchTeams", "api.team.search_teams.pagination_not_implemented.public_team_search", nil, "", http.StatusNotImplemented)
 			return
 		}
-		teams, err = c.App.SearchPublicTeams(props)
+		teams, err = c.App.SearchPublicTeams(&props)
 	} else {
 		teams = []*model.Team{}
 	}
@@ -1082,9 +1121,14 @@ func searchTeams(c *Context, w http.ResponseWriter, r *http.Request) {
 	var payload []byte
 	if props.Page != nil && props.PerPage != nil {
 		twc := map[string]interface{}{"teams": teams, "total_count": totalCount}
-		payload = model.ToJson(twc)
+		payload = model.ToJSON(twc)
 	} else {
-		payload = []byte(model.TeamListToJson(teams))
+		js, jsonErr := json.Marshal(teams)
+		if jsonErr != nil {
+			c.Err = model.NewAppError("searchTeams", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		payload = js
 	}
 
 	w.Write(payload)
@@ -1121,11 +1165,11 @@ func teamExists(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := map[string]bool{"exists": exists}
-	w.Write([]byte(model.MapBoolToJson(resp)))
+	w.Write([]byte(model.MapBoolToJSON(resp)))
 }
 
 func importTeam(c *Context, w http.ResponseWriter, r *http.Request) {
-	if c.App.Srv().License() != nil && *c.App.Srv().License().Features.Cloud {
+	if c.App.Channels().License() != nil && *c.App.Channels().License().Features.Cloud {
 		c.Err = model.NewAppError("importTeam", "api.restricted_system_admin", nil, "", http.StatusForbidden)
 		return
 	}
@@ -1210,7 +1254,7 @@ func importTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	auditRec.Success()
-	w.Write([]byte(model.MapToJson(data)))
+	w.Write([]byte(model.MapToJSON(data)))
 }
 
 func inviteUsersToTeam(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -1231,7 +1275,18 @@ func inviteUsersToTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	emailList := model.ArrayFromJson(r.Body)
+	bf, err := io.ReadAll(r.Body)
+	if err != nil {
+		c.Err = model.NewAppError("Api4.inviteUsersToTeams", "api.team.invite_members_to_team_and_channels.invalid_body.app_error", nil, err.Error(), http.StatusBadRequest)
+		return
+	}
+	memberInvite := &model.MemberInvite{}
+	if jsonErr := json.Unmarshal(bf, memberInvite); jsonErr != nil {
+		c.Err = model.NewAppError("Api4.inviteUsersToTeams", "api.team.invite_members_to_team_and_channels.invalid_body_parsing.app_error", nil, jsonErr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	emailList := memberInvite.Emails
 
 	for i := range emailList {
 		emailList[i] = strings.ToLower(emailList[i])
@@ -1248,50 +1303,16 @@ func inviteUsersToTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec.AddMeta("count", len(emailList))
 	auditRec.AddMeta("emails", emailList)
 
+	if len(memberInvite.ChannelIds) > 0 {
+		auditRec.AddMeta("channel_count", len(memberInvite.ChannelIds))
+		auditRec.AddMeta("channels", memberInvite.ChannelIds)
+	}
+
 	if graceful {
-		cloudUserLimit := *c.App.Config().ExperimentalSettings.CloudUserLimit
-		var invitesOverLimit []*model.EmailInviteWithError
-		if c.App.Srv().License() != nil && *c.App.Srv().License().Features.Cloud && cloudUserLimit > 0 {
-			subscription, subErr := c.App.Cloud().GetSubscription(c.AppContext.Session().UserId)
-			if subErr != nil {
-				c.Err = model.NewAppError(
-					"Api4.inviteUsersToTeam",
-					"api.team.cloud.subscription.error",
-					nil,
-					subErr.Error(),
-					http.StatusInternalServerError)
-				return
-			}
-			if subscription == nil || subscription.IsPaidTier != "true" {
-				emailList, invitesOverLimit, _ = c.App.GetErrorListForEmailsOverLimit(emailList, cloudUserLimit)
-			}
-		}
-
-		// we get the emailList after it has finished checks like the emails over the list
-
-		scheduledAt := model.GetMillis()
-		jobData := map[string]string{
-			"emailList":   model.ArrayToJson(emailList),
-			"teamID":      c.Params.TeamId,
-			"senderID":    c.AppContext.Session().UserId,
-			"scheduledAt": strconv.FormatInt(scheduledAt, 10),
-		}
-
-		// we then manually schedule the job
-		_, e := c.App.Srv().Jobs.CreateJob(model.JobTypeResendInvitationEmail, jobData)
-		if e != nil {
-			c.Err = model.NewAppError("Api4.inviteUsersToTeam", e.Id, nil, e.Error(), e.StatusCode)
-			return
-		}
-
 		var invitesWithError []*model.EmailInviteWithError
 		var err *model.AppError
 		if emailList != nil {
-			invitesWithError, err = c.App.InviteNewUsersToTeamGracefully(emailList, c.Params.TeamId, c.AppContext.Session().UserId)
-		}
-
-		if len(invitesOverLimit) > 0 {
-			invitesWithError = append(invitesWithError, invitesOverLimit...)
+			invitesWithError, err = c.App.InviteNewUsersToTeamGracefully(memberInvite, c.Params.TeamId, c.AppContext.Session().UserId, "")
 		}
 
 		if invitesWithError != nil {
@@ -1307,8 +1328,34 @@ func inviteUsersToTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 			c.Err = err
 			return
 		}
+
+		// we get the emailList after it has finished checks like the emails over the list
+		scheduledAt := model.GetMillis()
+		jobData := map[string]string{
+			"emailList":   model.ArrayToJSON(emailList),
+			"teamID":      c.Params.TeamId,
+			"senderID":    c.AppContext.Session().UserId,
+			"scheduledAt": strconv.FormatInt(scheduledAt, 10),
+		}
+
+		if len(memberInvite.ChannelIds) > 0 {
+			jobData["channelList"] = model.ArrayToJSON(memberInvite.ChannelIds)
+		}
+
+		// we then manually schedule the job to send another invite after 48 hours
+		_, e := c.App.Srv().Jobs.CreateJob(model.JobTypeResendInvitationEmail, jobData)
+		if e != nil {
+			c.Err = model.NewAppError("Api4.inviteUsersToTeam", e.Id, nil, e.Error(), e.StatusCode)
+			return
+		}
+
 		// in graceful mode we return both the successful ones and the failed ones
-		w.Write([]byte(model.EmailInviteWithErrorToJson(invitesWithError)))
+		js, jsonErr := json.Marshal(invitesWithError)
+		if jsonErr != nil {
+			c.Err = model.NewAppError("inviteUsersToTeam", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(js)
 	} else {
 		err := c.App.InviteNewUsersToTeam(emailList, c.Params.TeamId, c.AppContext.Session().UserId)
 		if err != nil {
@@ -1322,7 +1369,7 @@ func inviteUsersToTeam(c *Context, w http.ResponseWriter, r *http.Request) {
 
 func inviteGuestsToChannels(c *Context, w http.ResponseWriter, r *http.Request) {
 	graceful := r.URL.Query().Get("graceful") != ""
-	if c.App.Srv().License() == nil {
+	if c.App.Channels().License() == nil {
 		c.Err = model.NewAppError("Api4.InviteGuestsToChannels", "api.team.invate_guests_to_channels.license.error", nil, "", http.StatusNotImplemented)
 		return
 	}
@@ -1346,9 +1393,9 @@ func inviteGuestsToChannels(c *Context, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	guestsInvite := model.GuestsInviteFromJson(r.Body)
-	if guestsInvite == nil {
-		c.Err = model.NewAppError("Api4.inviteGuestsToChannels", "api.team.invite_guests_to_channels.invalid_body.app_error", nil, "", http.StatusBadRequest)
+	var guestsInvite model.GuestsInvite
+	if jsonErr := json.NewDecoder(r.Body).Decode(&guestsInvite); jsonErr != nil {
+		c.Err = model.NewAppError("Api4.inviteGuestsToChannels", "api.team.invite_guests_to_channels.invalid_body.app_error", nil, jsonErr.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -1365,33 +1412,11 @@ func inviteGuestsToChannels(c *Context, w http.ResponseWriter, r *http.Request) 
 	auditRec.AddMeta("channels", guestsInvite.Channels)
 
 	if graceful {
-		cloudUserLimit := *c.App.Config().ExperimentalSettings.CloudUserLimit
-		var invitesOverLimit []*model.EmailInviteWithError
-		if c.App.Srv().License() != nil && *c.App.Srv().License().Features.Cloud && cloudUserLimit > 0 && c.IsSystemAdmin() {
-			subscription, err := c.App.Cloud().GetSubscription(c.AppContext.Session().UserId)
-			if err != nil {
-				c.Err = model.NewAppError(
-					"Api4.inviteGuestsToChannel",
-					"api.team.cloud.subscription.error",
-					nil,
-					err.Error(),
-					http.StatusInternalServerError)
-				return
-			}
-			if subscription == nil || subscription.IsPaidTier != "true" {
-				guestsInvite.Emails, invitesOverLimit, _ = c.App.GetErrorListForEmailsOverLimit(guestsInvite.Emails, cloudUserLimit)
-			}
-		}
-
 		var invitesWithError []*model.EmailInviteWithError
 		var err *model.AppError
 
 		if guestsInvite.Emails != nil {
-			invitesWithError, err = c.App.InviteGuestsToChannelsGracefully(c.Params.TeamId, guestsInvite, c.AppContext.Session().UserId)
-		}
-
-		if len(invitesOverLimit) > 0 {
-			invitesWithError = append(invitesWithError, invitesOverLimit...)
+			invitesWithError, err = c.App.InviteGuestsToChannelsGracefully(c.Params.TeamId, &guestsInvite, c.AppContext.Session().UserId)
 		}
 
 		if err != nil {
@@ -1404,9 +1429,14 @@ func inviteGuestsToChannels(c *Context, w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		// in graceful mode we return both the successful ones and the failed ones
-		w.Write([]byte(model.EmailInviteWithErrorToJson(invitesWithError)))
+		js, jsonErr := json.Marshal(invitesWithError)
+		if jsonErr != nil {
+			c.Err = model.NewAppError("inviteGuestsToChannel", "api.marshal_error", nil, jsonErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(js)
 	} else {
-		err := c.App.InviteGuestsToChannels(c.Params.TeamId, guestsInvite, c.AppContext.Session().UserId)
+		err := c.App.InviteGuestsToChannels(c.Params.TeamId, &guestsInvite, c.AppContext.Session().UserId)
 		if err != nil {
 			c.Err = err
 			return
@@ -1438,7 +1468,7 @@ func getInviteInfo(c *Context, w http.ResponseWriter, r *http.Request) {
 	result["description"] = team.Description
 	result["name"] = team.Name
 	result["id"] = team.Id
-	w.Write([]byte(model.MapToJson(result)))
+	w.Write([]byte(model.MapToJSON(result)))
 }
 
 func invalidateAllEmailInvites(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -1491,7 +1521,7 @@ func getTeamIcon(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%v, private", 24*60*60)) // 24 hrs
+	w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%v, private", model.DayInSeconds)) // 24 hrs
 	w.Header().Set(model.HeaderEtagServer, etag)
 	w.Write(img)
 }
@@ -1581,8 +1611,14 @@ func updateTeamScheme(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	schemeID := model.SchemeIDFromJson(r.Body)
-	if schemeID == nil || (!model.IsValidId(*schemeID) && *schemeID != "") {
+	var p model.SchemeIDPatch
+	if jsonErr := json.NewDecoder(r.Body).Decode(&p); jsonErr != nil {
+		c.SetInvalidParam("scheme_id")
+		return
+	}
+
+	schemeID := p.SchemeID
+	if p.SchemeID == nil || (!model.IsValidId(*p.SchemeID) && *p.SchemeID != "") {
 		c.SetInvalidParam("scheme_id")
 		return
 	}
@@ -1590,7 +1626,7 @@ func updateTeamScheme(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec := c.MakeAuditRecord("updateTeamScheme", audit.Fail)
 	defer c.LogAuditRec(auditRec)
 
-	if c.App.Srv().License() == nil {
+	if c.App.Channels().License() == nil {
 		c.Err = model.NewAppError("Api4.UpdateTeamScheme", "api.team.update_team_scheme.license.error", nil, "", http.StatusNotImplemented)
 		return
 	}

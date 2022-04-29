@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"sort"
 	"strings"
@@ -26,6 +27,8 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 	if channel.DeleteAt > 0 {
 		return []string{}, nil
 	}
+
+	isCRTAllowed := a.Config().FeatureFlags.CollapsedThreads && *a.Config().ServiceSettings.CollapsedThreads != model.CollapsedThreadsDisabled
 
 	pchan := make(chan store.StoreResult, 1)
 	go func() {
@@ -61,6 +64,16 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		}()
 	}
 
+	var tchan chan store.StoreResult
+	if isCRTAllowed && post.RootId != "" {
+		tchan = make(chan store.StoreResult, 1)
+		go func() {
+			followers, err := a.Srv().Store.Thread().GetThreadFollowers(post.RootId, true)
+			tchan <- store.StoreResult{Data: followers, NErr: err}
+			close(tchan)
+		}()
+	}
+
 	result := <-pchan
 	if result.NErr != nil {
 		return nil, result.NErr
@@ -72,6 +85,15 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		return nil, result.NErr
 	}
 	channelMemberNotifyPropsMap := result.Data.(map[string]model.StringMap)
+
+	followers := make(model.StringArray, 0)
+	if tchan != nil {
+		result = <-tchan
+		if result.NErr != nil {
+			return nil, result.NErr
+		}
+		followers = result.Data.([]string)
+	}
 
 	groups := make(map[string]*model.Group)
 	if gchan != nil {
@@ -134,6 +156,9 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 				if threadPost.Id == parentPostList.Order[0] && threadPost.IsFromOAuthBot() {
 					continue
 				}
+				if a.IsCRTEnabledForUser(profile.Id) {
+					continue
+				}
 				if profile.NotifyProps[model.CommentsNotifyProp] == model.CommentsNotifyAny || (profile.NotifyProps[model.CommentsNotifyProp] == model.CommentsNotifyRoot && threadPost.Id == parentPostList.Order[0]) {
 					mentionType := ThreadMention
 					if threadPost.Id == parentPostList.Order[0] {
@@ -158,28 +183,33 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		}()
 
 		// find which users in the channel are set up to always receive mobile notifications
+		// excludes CRT users since those should be added in notificationsForCRT
 		for _, profile := range profileMap {
 			if (profile.NotifyProps[model.PushNotifyProp] == model.UserNotifyAll ||
 				channelMemberNotifyPropsMap[profile.Id][model.PushNotifyProp] == model.ChannelNotifyAll) &&
 				(post.UserId != profile.Id || post.GetProp("from_webhook") == "true") &&
-				!post.IsSystemMessage() {
+				!post.IsSystemMessage() &&
+				!(a.IsCRTEnabledForUser(profile.Id) && post.RootId != "") {
 				allActivityPushUserIds = append(allActivityPushUserIds, profile.Id)
 			}
 		}
 	}
 
 	mentionedUsersList := make(model.StringArray, 0, len(mentions.Mentions))
-	updateMentionChans := []chan *model.AppError{}
 	mentionAutofollowChans := []chan *model.AppError{}
 	threadParticipants := map[string]bool{post.UserId: true}
+	newParticipants := map[string]bool{}
 	participantMemberships := map[string]*model.ThreadMembership{}
 	membershipsMutex := &sync.Mutex{}
+	followersMutex := &sync.Mutex{}
 	if *a.Config().ServiceSettings.ThreadAutoFollow && post.RootId != "" {
 		var rootMentions *ExplicitMentions
 		if parentPostList != nil {
-			threadParticipants[parentPostList.Posts[parentPostList.Order[0]].UserId] = true
+			rootPost := parentPostList.Posts[parentPostList.Order[0]]
+			if rootPost.GetProp("from_webhook") != "true" {
+				threadParticipants[rootPost.UserId] = true
+			}
 			if channel.Type != model.ChannelTypeDirect {
-				rootPost := parentPostList.Posts[parentPostList.Order[0]]
 				rootMentions = getExplicitMentions(rootPost, keywords, groups)
 				for id := range rootMentions.Mentions {
 					threadParticipants[id] = true
@@ -189,11 +219,22 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		for id := range mentions.Mentions {
 			threadParticipants[id] = true
 		}
+
+		// sema is a counting semaphore to throttle the number of concurrent DB requests.
+		// A concurrency of 8 should be sufficient.
+		// We don't want to set a higher limit which can bring down the DB.
+		sema := make(chan struct{}, 8)
 		// for each mention, make sure to update thread autofollow (if enabled) and update increment mention count
 		for id := range threadParticipants {
 			mac := make(chan *model.AppError, 1)
+			// Get token.
+			sema <- struct{}{}
 			go func(userID string) {
-				defer close(mac)
+				defer func() {
+					close(mac)
+					// Release token.
+					<-sema
+				}()
 				mentionType, incrementMentions := mentions.Mentions[userID]
 				// if the user was not explicitly mentioned, check if they explicitly unfollowed the thread
 				if !incrementMentions {
@@ -206,9 +247,6 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 					}
 
 					if membership != nil && !membership.Following {
-						membershipsMutex.Lock()
-						participantMemberships[userID] = membership
-						membershipsMutex.Unlock()
 						return
 					}
 				}
@@ -222,7 +260,7 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 					Following:             true,
 					IncrementMentions:     incrementMentions,
 					UpdateFollowing:       updateFollowing,
-					UpdateViewedTimestamp: userID == post.UserId,
+					UpdateViewedTimestamp: false,
 					UpdateParticipants:    userID == post.UserId,
 				}
 				threadMembership, err := a.Srv().Store.Thread().MaintainMembership(userID, post.RootId, opts)
@@ -230,6 +268,15 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 					mac <- model.NewAppError("SendNotifications", "app.channel.autofollow.app_error", nil, err.Error(), http.StatusInternalServerError)
 					return
 				}
+
+				followersMutex.Lock()
+				// add new followers to existing followers
+				if threadMembership.Following && !followers.Contains(userID) {
+					followers = append(followers, userID)
+					newParticipants[userID] = true
+				}
+				followersMutex.Unlock()
+
 				membershipsMutex.Lock()
 				participantMemberships[userID] = threadMembership
 				membershipsMutex.Unlock()
@@ -241,18 +288,45 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 	}
 	for id := range mentions.Mentions {
 		mentionedUsersList = append(mentionedUsersList, id)
+	}
 
-		umc := make(chan *model.AppError, 1)
-		go func(userID string) {
-			defer close(umc)
-			nErr := a.Srv().Store.Channel().IncrementMentionCount(post.ChannelId, userID, *a.Config().ServiceSettings.ThreadAutoFollow, post.RootId == "")
-			if nErr != nil {
-				umc <- model.NewAppError("SendNotifications", "app.channel.increment_mention_count.app_error", nil, nErr.Error(), http.StatusInternalServerError)
-				return
+	nErr := a.Srv().Store.Channel().IncrementMentionCount(post.ChannelId, mentionedUsersList, post.RootId == "")
+	if nErr != nil {
+		mlog.Warn(
+			"Failed to update mention count",
+			mlog.String("post_id", post.Id),
+			mlog.String("channel_id", post.ChannelId),
+			mlog.Err(nErr),
+		)
+	}
+
+	// Log the problems that might have occurred while auto following the thread
+	for _, mac := range mentionAutofollowChans {
+		if err := <-mac; err != nil {
+			mlog.Warn(
+				"Failed to update thread autofollow from mention",
+				mlog.String("post_id", post.Id),
+				mlog.String("channel_id", post.ChannelId),
+				mlog.Err(err),
+			)
+		}
+	}
+
+	notificationsForCRT := &CRTNotifiers{}
+	if isCRTAllowed && post.RootId != "" {
+		for _, uid := range followers {
+			profile := profileMap[uid]
+			if profile == nil || !a.IsCRTEnabledForUser(uid) {
+				continue
 			}
-			umc <- nil
-		}(id)
-		updateMentionChans = append(updateMentionChans, umc)
+
+			if post.GetProp("from_webhook") != "true" && uid == post.UserId {
+				continue
+			}
+
+			// add user id to notificationsForCRT depending on threads notify props
+			notificationsForCRT.addFollowerToNotify(profile, mentions, channelMemberNotifyPropsMap[profile.Id], channel)
+		}
 	}
 
 	notification := &PostNotification{
@@ -263,7 +337,10 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 	}
 
 	if *a.Config().EmailSettings.SendEmailNotifications {
-		for _, id := range mentionedUsersList {
+		emailRecipients := append(mentionedUsersList, notificationsForCRT.Email...)
+		emailRecipients = model.RemoveDuplicateStrings(emailRecipients)
+
+		for _, id := range emailRecipients {
 			if profileMap[id] == nil {
 				continue
 			}
@@ -324,31 +401,6 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		}
 	}
 
-	// Make sure all mention updates are complete to prevent race
-	// Probably better to batch these DB updates in the future
-	// MUST be completed before push notifications send
-	for _, umc := range updateMentionChans {
-		if err := <-umc; err != nil {
-			mlog.Warn(
-				"Failed to update mention count",
-				mlog.String("post_id", post.Id),
-				mlog.String("channel_id", post.ChannelId),
-				mlog.Err(err),
-			)
-		}
-	}
-
-	// Log the problems that might have occurred while auto following the thread
-	for _, mac := range mentionAutofollowChans {
-		if err := <-mac; err != nil {
-			mlog.Warn(
-				"Failed to update thread autofollow from mention",
-				mlog.String("post_id", post.Id),
-				mlog.String("channel_id", post.ChannelId),
-				mlog.Err(err),
-			)
-		}
-	}
 	sendPushNotifications := false
 	if *a.Config().EmailSettings.SendPushNotifications {
 		pushServer := *a.Config().EmailSettings.PushNotificationServer
@@ -362,7 +414,7 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 
 	if sendPushNotifications {
 		for _, id := range mentionedUsersList {
-			if profileMap[id] == nil {
+			if profileMap[id] == nil || notificationsForCRT.Push.Contains(id) {
 				continue
 			}
 
@@ -402,7 +454,7 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 		}
 
 		for _, id := range allActivityPushUserIds {
-			if profileMap[id] == nil {
+			if profileMap[id] == nil || notificationsForCRT.Push.Contains(id) {
 				continue
 			}
 
@@ -433,12 +485,47 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 				}
 			}
 		}
+
+		for _, id := range notificationsForCRT.Push {
+			if profileMap[id] == nil {
+				continue
+			}
+
+			var status *model.Status
+			var err *model.AppError
+			if status, err = a.GetStatus(id); err != nil {
+				status = &model.Status{UserId: id, Status: model.StatusOffline, Manual: false, LastActivityAt: 0, ActiveChannel: ""}
+			}
+
+			if DoesStatusAllowPushNotification(profileMap[id].NotifyProps, status, post.ChannelId) {
+				a.sendPushNotification(
+					notification,
+					profileMap[id],
+					false,
+					false,
+					model.CommentsNotifyCRT,
+				)
+			} else {
+				// register that a notification was not sent
+				a.NotificationsLog().Debug("Notification not sent",
+					mlog.String("ackId", ""),
+					mlog.String("type", model.PushTypeMessage),
+					mlog.String("userId", id),
+					mlog.String("postId", post.Id),
+					mlog.String("status", model.PushNotSent),
+				)
+			}
+		}
 	}
 
 	message := model.NewWebSocketEvent(model.WebsocketEventPosted, "", post.ChannelId, "", nil)
 
 	// Note that PreparePostForClient should've already been called by this point
-	message.Add("post", post.ToJson())
+	postJSON, jsonErr := post.ToJSON()
+	if jsonErr != nil {
+		return nil, errors.Wrapf(jsonErr, "failed to encode post to JSON")
+	}
+	message.Add("post", postJSON)
 
 	message.Add("channel_type", channel.Type)
 	message.Add("channel_display_name", notification.GetChannelName(model.ShowUsername, ""))
@@ -466,55 +553,115 @@ func (a *App) SendNotifications(post *model.Post, team *model.Team, channel *mod
 	}
 
 	if len(mentionedUsersList) != 0 {
-		message.Add("mentions", model.ArrayToJson(mentionedUsersList))
+		message.Add("mentions", model.ArrayToJSON(mentionedUsersList))
 	}
 
-	a.Publish(message)
+	if len(notificationsForCRT.Desktop) != 0 {
+		message.Add("followers", model.ArrayToJSON(notificationsForCRT.Desktop))
+	}
+
+	published, err := a.publishWebsocketEventForPermalinkPost(post, message)
+	if err != nil {
+		return nil, err
+	}
+	if !published {
+		a.Publish(message)
+	}
 
 	// If this is a reply in a thread, notify participants
-	if a.Config().FeatureFlags.CollapsedThreads && *a.Config().ServiceSettings.CollapsedThreads != model.CollapsedThreadsDisabled && post.RootId != "" {
-		followers, err := a.Srv().Store.Thread().GetThreadFollowers(post.RootId)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot get thread %q followers", post.RootId)
-		}
+	if isCRTAllowed && post.RootId != "" {
 		for _, uid := range followers {
-			sendEvent := *a.Config().ServiceSettings.CollapsedThreads == model.CollapsedThreadsDefaultOn
-			// check if a participant has overridden collapsed threads settings
-			if preference, prefErr := a.Srv().Store.Preference().Get(uid, model.PreferenceCategoryDisplaySettings, model.PreferenceNameCollapsedThreadsEnabled); prefErr == nil {
-				sendEvent = preference.Value == "on"
+			// A user following a thread but had left the channel won't get a notification
+			// https://mattermost.atlassian.net/browse/MM-36769
+			if profileMap[uid] == nil {
+				continue
 			}
-			if sendEvent {
+			if a.IsCRTEnabledForUser(uid) {
 				message := model.NewWebSocketEvent(model.WebsocketEventThreadUpdated, team.Id, "", uid, nil)
 				threadMembership := participantMemberships[uid]
 				if threadMembership == nil {
-					threadMembership, err = a.Srv().Store.Thread().GetMembershipForUser(uid, post.RootId)
+					tm, err := a.Srv().Store.Thread().GetMembershipForUser(uid, post.RootId)
 					if err != nil {
 						return nil, errors.Wrapf(err, "Missing thread membership for participant in notifications. user_id=%q thread_id=%q", uid, post.RootId)
 					}
-					if threadMembership == nil {
+					if tm == nil {
 						continue
 					}
+					threadMembership = tm
 				}
 				userThread, err := a.Srv().Store.Thread().GetThreadForUser(channel.TeamId, threadMembership, true)
 				if err != nil {
 					return nil, errors.Wrapf(err, "cannot get thread %q for user %q", post.RootId, uid)
 				}
 				if userThread != nil {
+					previousUnreadMentions := int64(0)
+					previousUnreadReplies := int64(0)
+
+					// if it's not a newly followed thread, calculate previous unread values.
+					if !newParticipants[uid] {
+						previousUnreadMentions = userThread.UnreadMentions
+						previousUnreadReplies = max(userThread.UnreadReplies-1, 0)
+
+						if mentions.isUserMentioned(uid) {
+							previousUnreadMentions = max(userThread.UnreadMentions-1, 0)
+						}
+					}
+
+					// set LastViewed to now for commenter
+					if uid == post.UserId {
+						opts := store.ThreadMembershipOpts{
+							UpdateViewedTimestamp: true,
+						}
+						// should set unread mentions, and unread replies to 0
+						_, err = a.Srv().Store.Thread().MaintainMembership(uid, post.RootId, opts)
+						if err != nil {
+							return nil, errors.Wrapf(err, "cannot maintain thread membership %q for user %q", post.RootId, uid)
+						}
+						userThread.UnreadMentions = 0
+						userThread.UnreadReplies = 0
+					}
 					a.sanitizeProfiles(userThread.Participants, false)
 					userThread.Post.SanitizeProps()
-					message.Add("thread", userThread.ToJson())
+
+					sanitizedPost, err := a.SanitizePostMetadataForUser(userThread.Post, uid)
+					if err != nil {
+						return nil, err
+					}
+					userThread.Post = sanitizedPost
+
+					payload, jsonErr := json.Marshal(userThread)
+					if jsonErr != nil {
+						mlog.Warn("Failed to encode thread to JSON")
+					}
+					message.Add("thread", string(payload))
+					message.Add("previous_unread_mentions", previousUnreadMentions)
+					message.Add("previous_unread_replies", previousUnreadReplies)
+
 					a.Publish(message)
 				}
 			}
 		}
-
 	}
 	return mentionedUsersList, nil
 }
 
+func max(a, b int64) int64 {
+	if a < b {
+		return b
+	}
+	return a
+}
+
 func (a *App) userAllowsEmail(user *model.User, channelMemberNotificationProps model.StringMap, post *model.Post) bool {
+	// if user is a bot account, then we do not send email
+	if user.IsBot {
+		return false
+	}
+
 	userAllowsEmails := user.NotifyProps[model.EmailNotifyProp] != "false"
-	if channelEmail, ok := channelMemberNotificationProps[model.EmailNotifyProp]; ok {
+
+	// if CRT is ON for user and the post is a reply disregard the channelEmail setting
+	if channelEmail, ok := channelMemberNotificationProps[model.EmailNotifyProp]; ok && !(a.IsCRTEnabledForUser(user.Id) && post.RootId != "") {
 		if channelEmail != model.ChannelNotifyDefault {
 			userAllowsEmails = channelEmail != "false"
 		}
@@ -551,7 +698,6 @@ func (a *App) sendNoUsersNotifiedByGroupInChannel(sender *model.User, post *mode
 	ephemeralPost := &model.Post{
 		UserId:    sender.Id,
 		RootId:    post.RootId,
-		ParentId:  post.ParentId,
 		ChannelId: channel.Id,
 		Message:   T("api.post.check_for_out_of_channel_group_users.message.none", model.StringInterface{"GroupName": group.Name}),
 	}
@@ -767,6 +913,18 @@ const (
 	GroupMention
 )
 
+func (m *ExplicitMentions) isUserMentioned(userID string) bool {
+	if _, ok := m.Mentions[userID]; ok {
+		return true
+	}
+
+	if _, ok := m.GroupMentions[userID]; ok {
+		return true
+	}
+
+	return m.HereMentioned || m.AllMentioned || m.ChannelMentioned
+}
+
 func (m *ExplicitMentions) addMention(userID string, mentionType MentionType) {
 	if m.Mentions == nil {
 		m.Mentions = make(map[string]MentionType)
@@ -878,7 +1036,7 @@ func (a *App) allowChannelMentions(post *model.Post, numProfiles int) bool {
 
 // allowGroupMentions returns whether or not the group mentions are allowed for the given post.
 func (a *App) allowGroupMentions(post *model.Post) bool {
-	if license := a.Srv().License(); license == nil || !*license.Features.LDAPGroups {
+	if license := a.Srv().License(); license == nil || (license.SkuShortName != model.LicenseShortSkuProfessional && license.SkuShortName != model.LicenseShortSkuEnterprise) {
 		return false
 	}
 
@@ -897,7 +1055,7 @@ func (a *App) allowGroupMentions(post *model.Post) bool {
 func (a *App) getGroupsAllowedForReferenceInChannel(channel *model.Channel, team *model.Team) (map[string]*model.Group, error) {
 	var err error
 	groupsMap := make(map[string]*model.Group)
-	opts := model.GroupSearchOpts{FilterAllowReference: true}
+	opts := model.GroupSearchOpts{FilterAllowReference: true, IncludeMemberCount: true}
 
 	if channel.IsGroupConstrained() || (team != nil && team.IsGroupConstrained()) {
 		var groups []*model.GroupWithSchemeAdmin
@@ -1210,4 +1368,98 @@ func (a *App) GetNotificationNameFormat(user *model.User) string {
 	}
 
 	return data.Value
+}
+
+type CRTNotifiers struct {
+	// Desktop contains the user IDs of thread followers to receive desktop notification
+	Desktop model.StringArray
+
+	// Email contains the user IDs of thread followers to receive email notification
+	Email model.StringArray
+
+	// Push contains the user IDs of thread followers to receive push notification
+	Push model.StringArray
+}
+
+func (c *CRTNotifiers) addFollowerToNotify(user *model.User, mentions *ExplicitMentions, channelMemberNotificationProps model.StringMap, channel *model.Channel) {
+	_, userWasMentioned := mentions.Mentions[user.Id]
+	notifyDesktop, notifyPush, notifyEmail := shouldUserNotifyCRT(user, userWasMentioned)
+	notifyChannelDesktop, notifyChannelPush := shouldChannelMemberNotifyCRT(channelMemberNotificationProps, userWasMentioned)
+
+	// respect the user global notify props when there are no channel specific ones (default)
+	// otherwise respect the channel member's notify props
+	if (channelMemberNotificationProps[model.DesktopNotifyProp] == model.ChannelNotifyDefault && notifyDesktop) || notifyChannelDesktop {
+		c.Desktop = append(c.Desktop, user.Id)
+	}
+
+	if notifyEmail {
+		c.Email = append(c.Email, user.Id)
+	}
+
+	// respect the user global notify props when there are no channel specific ones (default)
+	// otherwise respect the channel member's notify props
+	if (channelMemberNotificationProps[model.PushNotifyProp] == model.ChannelNotifyDefault && notifyPush) || notifyChannelPush {
+		c.Push = append(c.Push, user.Id)
+	}
+}
+
+// user global settings check for desktop, email, and push notifications
+func shouldUserNotifyCRT(user *model.User, isMentioned bool) (notifyDesktop, notifyPush, notifyEmail bool) {
+	notifyDesktop = false
+	notifyPush = false
+	notifyEmail = false
+
+	desktop := user.NotifyProps[model.DesktopNotifyProp]
+	push := user.NotifyProps[model.PushNotifyProp]
+	shouldEmail := user.NotifyProps[model.EmailNotifyProp] == "true"
+
+	desktopThreads := user.NotifyProps[model.DesktopThreadsNotifyProp]
+	emailThreads := user.NotifyProps[model.EmailThreadsNotifyProp]
+	pushThreads := user.NotifyProps[model.PushThreadsNotifyProp]
+
+	// user should be notified via desktop notification in the case the notify prop is not set as no notify
+	// and either the user was mentioned or the CRT notify prop for desktop is set to all
+	if desktop != model.UserNotifyNone && (isMentioned || desktopThreads == model.UserNotifyAll || desktop == model.UserNotifyAll) {
+		notifyDesktop = true
+	}
+
+	// user should be notified via email when emailing is enabled and
+	// either the user was mentioned, or the CRT notify prop for email is set to all
+	if shouldEmail && (isMentioned || emailThreads == model.UserNotifyAll) {
+		notifyEmail = true
+	}
+
+	// user should be notified via push in the case the notify prop is not set as no notify
+	// and either the user was mentioned or the CRT push notify prop is set to all
+	if push != model.UserNotifyNone && (isMentioned || pushThreads == model.UserNotifyAll || push == model.UserNotifyAll) {
+		notifyPush = true
+	}
+
+	return
+}
+
+// channel specific settings check for desktop and push notifications
+func shouldChannelMemberNotifyCRT(notifyProps model.StringMap, isMentioned bool) (notifyDesktop, notifyPush bool) {
+	notifyDesktop = false
+	notifyPush = false
+
+	desktop := notifyProps[model.DesktopNotifyProp]
+	push := notifyProps[model.PushNotifyProp]
+
+	desktopThreads := notifyProps[model.DesktopThreadsNotifyProp]
+	pushThreads := notifyProps[model.PushThreadsNotifyProp]
+
+	// user should be notified via desktop notification in the case the notify prop is not set as no notify or default
+	// and either the user was mentioned or the CRT notify prop for desktop is set to all
+	if desktop != model.ChannelNotifyDefault && desktop != model.ChannelNotifyNone && (isMentioned || desktopThreads == model.ChannelNotifyAll || desktop == model.ChannelNotifyAll) {
+		notifyDesktop = true
+	}
+
+	// user should be notified via push in the case the notify prop is not set as no notify or default
+	// and either the user was mentioned or the CRT push notify prop is set to all
+	if push != model.ChannelNotifyDefault && push != model.ChannelNotifyNone && (isMentioned || pushThreads == model.ChannelNotifyAll || push == model.ChannelNotifyAll) {
+		notifyPush = true
+	}
+
+	return
 }

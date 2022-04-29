@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/shared/i18n"
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
@@ -81,12 +82,12 @@ func desanitize(actual, target *model.Config) {
 		}
 	}
 
-	if *target.MessageExportSettings.GlobalRelaySettings.SmtpPassword == model.FakeSetting {
-		*target.MessageExportSettings.GlobalRelaySettings.SmtpPassword = *actual.MessageExportSettings.GlobalRelaySettings.SmtpPassword
+	if *target.MessageExportSettings.GlobalRelaySettings.SMTPPassword == model.FakeSetting {
+		*target.MessageExportSettings.GlobalRelaySettings.SMTPPassword = *actual.MessageExportSettings.GlobalRelaySettings.SMTPPassword
 	}
 
-	if target.ServiceSettings.GfycatApiSecret != nil && *target.ServiceSettings.GfycatApiSecret == model.FakeSetting {
-		*target.ServiceSettings.GfycatApiSecret = *actual.ServiceSettings.GfycatApiSecret
+	if target.ServiceSettings.GfycatAPISecret != nil && *target.ServiceSettings.GfycatAPISecret == model.FakeSetting {
+		*target.ServiceSettings.GfycatAPISecret = *actual.ServiceSettings.GfycatAPISecret
 	}
 
 	if *target.ServiceSettings.SplitKey == model.FakeSetting {
@@ -174,7 +175,9 @@ func Merge(cfg *model.Config, patch *model.Config, mergeConfig *utils.MergeConfi
 }
 
 func IsDatabaseDSN(dsn string) bool {
-	return strings.HasPrefix(dsn, "mysql://") || strings.HasPrefix(dsn, "postgres://")
+	return strings.HasPrefix(dsn, "mysql://") ||
+		strings.HasPrefix(dsn, "postgres://") ||
+		strings.HasPrefix(dsn, "postgresql://")
 }
 
 // stripPassword remove the password from a given DSN
@@ -258,4 +261,30 @@ func equal(oldCfg, newCfg *model.Config) (bool, error) {
 		return false, fmt.Errorf("failed to marshal new config: %w", err)
 	}
 	return !bytes.Equal(oldCfgBytes, newCfgBytes), nil
+}
+
+// appendMultipleStatementsFlag attached dsn parameters to MySQL dsn in order to make migrations work.
+func appendMultipleStatementsFlag(dataSource string) (string, error) {
+
+	config, err := mysql.ParseDSN(dataSource)
+	if err != nil {
+		return "", err
+	}
+
+	if config.Params == nil {
+		config.Params = map[string]string{}
+	}
+
+	config.Params["multiStatements"] = "true"
+	return config.FormatDSN(), nil
+}
+
+// resetReadTimeout removes the timeout contraint from the MySQL dsn.
+func resetReadTimeout(dataSource string) (string, error) {
+	config, err := mysql.ParseDSN(dataSource)
+	if err != nil {
+		return "", err
+	}
+	config.ReadTimeout = 0
+	return config.FormatDSN(), nil
 }

@@ -19,19 +19,19 @@ import (
 )
 
 func (api *API) InitLicense() {
-	api.BaseRoutes.ApiRoot.Handle("/trial-license", api.ApiSessionRequired(requestTrialLicense)).Methods("POST")
-	api.BaseRoutes.ApiRoot.Handle("/trial-license/prev", api.ApiSessionRequired(getPrevTrialLicense)).Methods("GET")
-	api.BaseRoutes.ApiRoot.Handle("/license", api.ApiSessionRequired(addLicense)).Methods("POST")
-	api.BaseRoutes.ApiRoot.Handle("/license", api.ApiSessionRequired(removeLicense)).Methods("DELETE")
-	api.BaseRoutes.ApiRoot.Handle("/license/renewal", api.ApiSessionRequired(requestRenewalLink)).Methods("GET")
-	api.BaseRoutes.ApiRoot.Handle("/license/client", api.ApiHandler(getClientLicense)).Methods("GET")
+	api.BaseRoutes.APIRoot.Handle("/trial-license", api.APISessionRequired(requestTrialLicense)).Methods("POST")
+	api.BaseRoutes.APIRoot.Handle("/trial-license/prev", api.APISessionRequired(getPrevTrialLicense)).Methods("GET")
+	api.BaseRoutes.APIRoot.Handle("/license", api.APISessionRequired(addLicense)).Methods("POST")
+	api.BaseRoutes.APIRoot.Handle("/license", api.APISessionRequired(removeLicense)).Methods("DELETE")
+	api.BaseRoutes.APIRoot.Handle("/license/renewal", api.APISessionRequired(requestRenewalLink)).Methods("GET")
+	api.BaseRoutes.APIRoot.Handle("/license/client", api.APIHandler(getClientLicense)).Methods("GET")
 }
 
 func getClientLicense(c *Context, w http.ResponseWriter, r *http.Request) {
 	format := r.URL.Query().Get("format")
 
 	if format == "" {
-		c.Err = model.NewAppError("getClientLicense", "api.license.client.old_format.app_error", nil, "", http.StatusNotImplemented)
+		c.Err = model.NewAppError("getClientLicense", "api.license.client.old_format.app_error", nil, "", http.StatusBadRequest)
 		return
 	}
 
@@ -48,7 +48,7 @@ func getClientLicense(c *Context, w http.ResponseWriter, r *http.Request) {
 		clientLicense = c.App.Srv().GetSanitizedClientLicense()
 	}
 
-	w.Write([]byte(model.MapToJson(clientLicense)))
+	w.Write([]byte(model.MapToJSON(clientLicense)))
 }
 
 func addLicense(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -209,38 +209,8 @@ func requestTrialLicense(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.Unmarshal(b, &trialRequest)
-	if !trialRequest.TermsAccepted {
-		c.Err = model.NewAppError("requestTrialLicense", "api.license.request-trial.bad-request.terms-not-accepted", nil, "", http.StatusBadRequest)
-		return
-	}
-	if trialRequest.Users == 0 {
-		c.Err = model.NewAppError("requestTrialLicense", "api.license.request-trial.bad-request", nil, "", http.StatusBadRequest)
-		return
-	}
 
-	currentUser, appErr := c.App.GetUser(c.AppContext.Session().UserId)
-	if appErr != nil {
-		c.Err = appErr
-		return
-	}
-
-	trialLicenseRequest := &model.TrialLicenseRequest{
-		ServerID:              c.App.TelemetryId(),
-		Name:                  currentUser.GetDisplayName(model.ShowFullName),
-		Email:                 currentUser.Email,
-		SiteName:              *c.App.Config().TeamSettings.SiteName,
-		SiteURL:               *c.App.Config().ServiceSettings.SiteURL,
-		Users:                 trialRequest.Users,
-		TermsAccepted:         trialRequest.TermsAccepted,
-		ReceiveEmailsAccepted: trialRequest.ReceiveEmailsAccepted,
-	}
-
-	if trialLicenseRequest.SiteURL == "" {
-		c.Err = model.NewAppError("RequestTrialLicense", "api.license.request_trial_license.no-site-url.app_error", nil, "", http.StatusBadRequest)
-		return
-	}
-
-	if err := c.App.Srv().RequestTrialLicense(trialLicenseRequest); err != nil {
+	if err := c.App.Channels().RequestTrialLicense(c.AppContext.Session().UserId, trialRequest.Users, trialRequest.TermsAccepted, trialRequest.ReceiveEmailsAccepted); err != nil {
 		c.Err = err
 		return
 	}
@@ -266,9 +236,21 @@ func requestRenewalLink(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renewalLink, err := c.App.Srv().GenerateLicenseRenewalLink()
+	renewalLink, token, err := c.App.Srv().GenerateLicenseRenewalLink()
 	if err != nil {
 		c.Err = err
+		return
+	}
+
+	if c.App.Cloud() == nil {
+		c.Err = model.NewAppError("requestRenewalLink", "api.license.upgrade_needed.app_error", nil, "", http.StatusForbidden)
+		return
+	}
+
+	// check if it is possible to renew license on the portal with generated token
+	e := c.App.Cloud().GetLicenseRenewalStatus(c.AppContext.Session().UserId, token)
+	if e != nil {
+		c.Err = model.NewAppError("requestRenewalLink", "api.license.request_renewal_link.cannot_renew_on_cws", nil, e.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -302,5 +284,5 @@ func getPrevTrialLicense(c *Context, w http.ResponseWriter, r *http.Request) {
 		clientLicense = utils.GetSanitizedClientLicense(utils.GetClientLicense(license))
 	}
 
-	w.Write([]byte(model.MapToJson(clientLicense)))
+	w.Write([]byte(model.MapToJSON(clientLicense)))
 }

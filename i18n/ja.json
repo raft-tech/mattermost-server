@@ -137,7 +137,7 @@
   },
   {
     "id": "api.channel.add_user_to_channel.type.app_error",
-    "translation": "この種類のチャンネルにはユーザーを追加することはできません。"
+    "translation": "この種別のチャンネルにはユーザーを追加することはできません。"
   },
   {
     "id": "api.channel.change_channel_privacy.private_to_public",
@@ -146,14 +146,6 @@
   {
     "id": "api.channel.change_channel_privacy.public_to_private",
     "translation": "このチャンネルは非公開チャンネルに変更されました。"
-  },
-  {
-    "id": "api.channel.convert_channel_to_private.default_channel_error",
-    "translation": "このデフォルトチャンネルは非公開チャンネルに変更できません。"
-  },
-  {
-    "id": "api.channel.convert_channel_to_private.private_channel_error",
-    "translation": "変更しようとしているチャンネルはすでに非公開チャンネルです。"
   },
   {
     "id": "api.channel.create_channel.direct_channel.app_error",
@@ -639,7 +631,7 @@
   },
   {
     "id": "api.command_invite.channel.error",
-    "translation": "チャンネル {{.Channel}} が見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://about.mattermost.com/default-channel-handle-documentation)を使用してください。"
+    "translation": "チャンネル {{.Channel}} が見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel)を使用してください。"
   },
   {
     "id": "api.command_invite.desc",
@@ -783,7 +775,7 @@
   },
   {
     "id": "api.command_mute.error",
-    "translation": "チャンネル {{.Channel}} が見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://about.mattermost.com/default-channel-handle-documentation)を使用してください。"
+    "translation": "チャンネル {{.Channel}} が見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel)を使用してください。"
   },
   {
     "id": "api.command_mute.hint",
@@ -795,7 +787,7 @@
   },
   {
     "id": "api.command_mute.no_channel.error",
-    "translation": "指定したチャンネルが見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://about.mattermost.com/default-channel-handle-documentation)を使用してください。"
+    "translation": "指定したチャンネルが見つかりませんでした。チャンネルの指定には[チャンネルのハンドル名](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel)を使用してください。"
   },
   {
     "id": "api.command_mute.not_member.error",
@@ -895,7 +887,7 @@
   },
   {
     "id": "api.command_settings.desc",
-    "translation": "アカウント設定ダイアログを開く"
+    "translation": "設定ダイアログを開く"
   },
   {
     "id": "api.command_settings.name",
@@ -1181,7 +1173,7 @@
   },
   {
     "id": "api.marshal_error",
-    "translation": "変換エラー"
+    "translation": "変換できませんでした。"
   },
   {
     "id": "api.oauth.allow_oauth.redirect_callback.app_error",
@@ -1301,11 +1293,11 @@
   },
   {
     "id": "api.post.check_for_out_of_channel_mentions.message.multiple",
-    "translation": "@{{.Usernames}}と@{{.LastUsername}}についての投稿が行われましたが、彼らはこのチャンネルには属していないため通知を受け取ることができませんでした。"
+    "translation": "@{{.Usernames}}と@{{.LastUsername}}にメンションしましたが、彼らはこのチャンネルには属していないため通知を受け取ることができませんでした。"
   },
   {
     "id": "api.post.check_for_out_of_channel_mentions.message.one",
-    "translation": "@{{.Usernames}}についての投稿が行われましたが、彼らはこのチャンネルには属していないため通知を受け取ることができませんでした。"
+    "translation": "@{{.Usernames}}にメンションしましたが、彼らはこのチャンネルには属していないため通知を受け取ることができませんでした。"
   },
   {
     "id": "api.post.create_post.can_not_post_to_deleted.error",
@@ -1316,16 +1308,8 @@
     "translation": "RootIdパラメーターのChannelIdが不正です。"
   },
   {
-    "id": "api.post.create_post.parent_id.app_error",
-    "translation": "ParentIdパラメーターが不正です。"
-  },
-  {
     "id": "api.post.create_post.root_id.app_error",
     "translation": "RootIdパラメーターが不正です。"
-  },
-  {
-    "id": "api.post.create_post.town_square_read_only",
-    "translation": "このチャンネルは読み取り専用です。権限のあるメンバーのみがここに投稿できます。"
   },
   {
     "id": "api.post.create_webhook_post.creating.app_error",
@@ -1384,10 +1368,6 @@
     "translation": "削除されたチャンネルの投稿は更新できません。"
   },
   {
-    "id": "api.post.save_is_pinned_post.town_square_read_only",
-    "translation": "このチャンネルは読み取り専用です。権限のあるメンバーのみがこのチャンネルの投稿をピン留めできます。"
-  },
-  {
     "id": "api.post.send_notification_and_forget.push_channel_mention",
     "translation": " がチャンネルへ通知しました。"
   },
@@ -1401,7 +1381,7 @@
   },
   {
     "id": "api.post.send_notifications_and_forget.push_explicit_mention",
-    "translation": " があなたについての投稿を行いました。"
+    "translation": " があなたにメンションしました。"
   },
   {
     "id": "api.post.send_notifications_and_forget.push_general_message",
@@ -1466,10 +1446,6 @@
   {
     "id": "api.reaction.save_reaction.user_id.app_error",
     "translation": "他のユーザーのリアクションを保存することはできません。"
-  },
-  {
-    "id": "api.reaction.town_square_read_only",
-    "translation": "読み取り専用チャンネルで投稿へリアクションすることはできません。"
   },
   {
     "id": "api.restricted_system_admin",
@@ -1809,7 +1785,7 @@
   },
   {
     "id": "api.templates.email_footer",
-    "translation": "通知設定を変更するには、チームにログインしアカウント設定から通知を選択してください。"
+    "translation": "通知設定を変更するには、チームにログインし設定から通知を選択してください。"
   },
   {
     "id": "api.templates.email_info1",
@@ -2508,10 +2484,6 @@
     "translation": "チャンネルの表示名の長さが制限を超えています。"
   },
   {
-    "id": "app.import.validate_channel_import_data.display_name_missing.error",
-    "translation": "必須のチャンネル設定値 display_name が存在しません"
-  },
-  {
     "id": "app.import.validate_channel_import_data.header_length.error",
     "translation": "チャンネルヘッダーが長すぎます。"
   },
@@ -2541,7 +2513,7 @@
   },
   {
     "id": "app.import.validate_channel_import_data.type_invalid.error",
-    "translation": "チャンネルの種類が不正です。"
+    "translation": "チャンネル種別が不正です。"
   },
   {
     "id": "app.import.validate_channel_import_data.type_missing.error",
@@ -2881,7 +2853,7 @@
   },
   {
     "id": "app.notification.subject.direct.full",
-    "translation": "[{{.SiteName}}] {{.Month}} {{.Day}}, {{.Year}} @{{.SenderDisplayName}} からの新しいダイレクトメッセージ"
+    "translation": "[{{.SiteName}}] {{.Month}} {{.Day}}, {{.Year}} {{.SenderDisplayName}} からの新しいダイレクトメッセージ"
   },
   {
     "id": "app.notification.subject.group_message.full",
@@ -3014,10 +2986,6 @@
   {
     "id": "brand.save_brand_image.save_image.app_error",
     "translation": "ファイルストレージに画像ファイルを書き込めません。接続を確認し、再度実行してください。"
-  },
-  {
-    "id": "cli.license.critical",
-    "translation": "この機能はEnterprise Editionへのアップグレードとライセンスキーを要求しています。システム管理者に連絡してください。"
   },
   {
     "id": "ent.account_migration.get_all_failed",
@@ -3564,10 +3532,6 @@
     "translation": "不正なユーザー名です。"
   },
   {
-    "id": "model.channel.is_valid.2_or_more.app_error",
-    "translation": "名前は2文字以上の小文字の英数字にしてください。"
-  },
-  {
     "id": "model.channel.is_valid.create_at.app_error",
     "translation": "作成日時は有効な時刻にしてください。"
   },
@@ -3716,10 +3680,6 @@
     "translation": "不正なコマンドフックIDです。"
   },
   {
-    "id": "model.command_hook.parent_id.app_error",
-    "translation": "不正な親IDです。"
-  },
-  {
     "id": "model.command_hook.root_id.app_error",
     "translation": "不正なルートIDです。"
   },
@@ -3788,10 +3748,6 @@
     "translation": "ElasticsearchのAggregatePostsAfterDays設定は1以上でなくてはなりません。"
   },
   {
-    "id": "model.config.is_valid.elastic_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Elasticsearchの一括インデックス付与処理の時間は1秒以上でなければなりません。"
-  },
-  {
     "id": "model.config.is_valid.elastic_search.connection_url.app_error",
     "translation": "Elastic Searchインデックスが有効な場合、Elastic SearchのConnectionUrl設定は必須です。"
   },
@@ -3801,7 +3757,7 @@
   },
   {
     "id": "model.config.is_valid.elastic_search.live_indexing_batch_size.app_error",
-    "translation": "Elasticsearchライブインデックス処理バッチのサイズは1以上でなければなりません。"
+    "translation": "Elasticsearch Live Indexing Batch Sizeは1以上でなければなりません。"
   },
   {
     "id": "model.config.is_valid.elastic_search.posts_aggregator_job_start_time.app_error",
@@ -4381,7 +4337,7 @@
   },
   {
     "id": "model.post.is_valid.file_ids.app_error",
-    "translation": "ファイルIDが不正です。アップロードは最大5ファイルまでに制限されています。それ以上のファイルをアップロードするには追加の投稿を行ってください。"
+    "translation": "ファイルIDが不正です。アップロードは最大10ファイルまでに制限されています。それ以上のファイルをアップロードするには追加の投稿を行ってください。"
   },
   {
     "id": "model.post.is_valid.filenames.app_error",
@@ -4404,20 +4360,12 @@
     "translation": "不正なオリジナルIDです。"
   },
   {
-    "id": "model.post.is_valid.parent_id.app_error",
-    "translation": "不正な親IDです。"
-  },
-  {
     "id": "model.post.is_valid.props.app_error",
     "translation": "不正な設定値です。"
   },
   {
     "id": "model.post.is_valid.root_id.app_error",
     "translation": "不正なルートIDです。"
-  },
-  {
-    "id": "model.post.is_valid.root_parent.app_error",
-    "translation": "親IDが設定されている場合、無効なルートIDが設定されていなければなりません。"
   },
   {
     "id": "model.post.is_valid.type.app_error",
@@ -4656,18 +4604,6 @@
     "translation": "送信先アドレスが存在しません。"
   },
   {
-    "id": "store.sql.convert_string_array",
-    "translation": "FromDb: StringArrayを*stringに変換できません"
-  },
-  {
-    "id": "store.sql.convert_string_interface",
-    "translation": "FromDb: StringInterfaceを*stringに変換できません"
-  },
-  {
-    "id": "store.sql.convert_string_map",
-    "translation": "FromDb: StringMapを*stringに変換できません"
-  },
-  {
     "id": "store.sql_bot.get.missing.app_error",
     "translation": "Bot does not exist。"
   },
@@ -4813,19 +4749,19 @@
   },
   {
     "id": "web.error.unsupported_browser.min_os_version.windows",
-    "translation": "Windows 7+"
+    "translation": "Windows 8.1+"
   },
   {
     "id": "web.error.unsupported_browser.min_os_version.mac",
-    "translation": "macOS 10.9+"
+    "translation": "macOS 10.14+"
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.safari",
-    "translation": "Version 12+"
+    "translation": "Version 14.1+"
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.firefox",
-    "translation": "Version 60+"
+    "translation": "Version 91+"
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.edge",
@@ -4833,7 +4769,7 @@
   },
   {
     "id": "web.error.unsupported_browser.min_browser_version.chrome",
-    "translation": "Version 61+"
+    "translation": "Version 89+"
   },
   {
     "id": "web.error.unsupported_browser.learn_more",
@@ -5012,10 +4948,6 @@
     "translation": "Bleve 自動補完が有効に設定されている場合、Bleve インデックス有効化設定は有効でなければなりません"
   },
   {
-    "id": "model.config.is_valid.bleve_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Bleveの一括インデックス付与処理の時間は1秒以上でなければなりません。"
-  },
-  {
     "id": "model.command.is_valid.autocomplete_data.app_error",
     "translation": "無効な AutocompleteData です"
   },
@@ -5126,10 +5058,6 @@
   {
     "id": "ent.compliance.csv.metadata.json.zipfile.appError",
     "translation": "zipファイルを作成できません"
-  },
-  {
-    "id": "cli.outgoing_webhook.inconsistent_state.app_error",
-    "translation": "外向きのウェブフッは削除されましたが、エラーにより新しいウェブフックを作成できませんでした。"
   },
   {
     "id": "bleveengine.stop_user_index.error",
@@ -5752,10 +5680,6 @@
     "translation": "プラグインをダウンロードする際にエラーが発生しました。"
   },
   {
-    "id": "api.plugin.add_public_key.open.app_error",
-    "translation": "公開鍵ファイルを開く際にエラーが発生しました。"
-  },
-  {
     "id": "api.license.remove_expired_license.failed.error",
     "translation": "無効化されたライセンスへの電子メールを送信できませんでした。"
   },
@@ -5833,7 +5757,7 @@
   },
   {
     "id": "api.channel.remove_user_from_channel.app_error",
-    "translation": "この種類のチャンネルからユーザーを削除することはできません。"
+    "translation": "この種別のチャンネルからユーザーを削除することはできません。"
   },
   {
     "id": "api.channel.remove_members.denied",
@@ -5874,38 +5798,6 @@
   {
     "id": "api.bot.teams_channels.add_message_mobile",
     "translation": "ブラウザ、もしくはMattermostデスクトップアプリから、Botをチーム・チャンネルに追加してください。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.too_large.app_error",
-    "translation": "プロフィール画像をアップロードできません。ファイルが大き過ぎます。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.parse.app_error",
-    "translation": "マルチパートフォームを解析できません。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.open.app_error",
-    "translation": "画像ファイルを開けません。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.no_file.app_error",
-    "translation": "リクエストの'image'以下にファイルがありません。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.array.app_error",
-    "translation": "リクエストの'image'以下の配列が空です。"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.app_error",
-    "translation": "アイコン画像をアップロードできませんでした。"
-  },
-  {
-    "id": "api.bot.get_bot_icon_image.read.app_error",
-    "translation": "アイコン画像ファイルを読み込めませんでした。"
-  },
-  {
-    "id": "api.bot.delete_bot_icon_image.app_error",
-    "translation": "アイコン画像を削除できませんでした。"
   },
   {
     "id": "api.bot.create_disabled",
@@ -6472,18 +6364,6 @@
     "translation": "{{.WarnMetricName}}に値を保存できませんでした"
   },
   {
-    "id": "app.system.warn_metric.notification.invalid_metric.app_error",
-    "translation": "メトリックが見つかりませんでした。"
-  },
-  {
-    "id": "app.system.warn_metric.notification.empty_admin_list.app_error",
-    "translation": "管理者リストが空です。"
-  },
-  {
-    "id": "app.system.warn_metric.bot_description",
-    "translation": "[Mattermostアドバイザーについて詳しく知る](https://about.mattermost.com/default-channel-handle-documentation)"
-  },
-  {
     "id": "app.system.warn_metric.bot_displayname",
     "translation": "Mattermostアドバイザー"
   },
@@ -6514,14 +6394,6 @@
   {
     "id": "api.server.warn_metric.email_us",
     "translation": "メールにてお問い合わせください"
-  },
-  {
-    "id": "api.server.warn_metric.contacting_us",
-    "translation": "問い合わせ中"
-  },
-  {
-    "id": "api.server.warn_metric.contact_us",
-    "translation": "問い合わせ"
   },
   {
     "id": "api.server.warn_metric.bot_response.notification_success.message",
@@ -6929,7 +6801,7 @@
   },
   {
     "id": "app.channel.analytics_type_count.app_error",
-    "translation": "チャンネル形式数を取得できませんでした。"
+    "translation": "チャンネル種別数を取得できませんでした。"
   },
   {
     "id": "api.upgrade_to_enterprise_status.signature.app_error",
@@ -7104,10 +6976,6 @@
     "translation": "チャンネルメンバーを削除できませんでした。"
   },
   {
-    "id": "app.channel.increment_mention_count.app_error",
-    "translation": "誰かについての投稿数を増加できませんでした。"
-  },
-  {
     "id": "app.channel.get_public_channels.get.app_error",
     "translation": "公開チャンネルを取得できませんでした。"
   },
@@ -7162,10 +7030,6 @@
   {
     "id": "api.upgrade_to_enterprise.already-done.app_error",
     "translation": "すでにMattermost Enterprise Editionにアップグレードされています。アップグレードを完了するにはサーバーを再起動してください。"
-  },
-  {
-    "id": "api.team.invite_members.limit_reached.app_error",
-    "translation": "無料枠のユーザー数上限に達しました"
   },
   {
     "id": "api.post.search_posts.invalid_body.app_error",
@@ -7298,14 +7162,6 @@
   {
     "id": "api.team.add_team_member.invalid_body.app_error",
     "translation": "リクエストボディを解析できませんでした。"
-  },
-  {
-    "id": "api.server.warn_metric.starting_trial",
-    "translation": "トライアルを開始する"
-  },
-  {
-    "id": "api.server.warn_metric.start_trial",
-    "translation": "トライアル開始"
   },
   {
     "id": "api.server.warn_metric.number_of_teams_5.start_trial_notification_success.message",
@@ -7624,22 +7480,6 @@
     "translation": "© 2021 Mattermost, Inc. 530 Lytton Avenue, Second floor, Palo Alto, CA, 94301"
   },
   {
-    "id": "api.templates.at_limit_title",
-    "translation": "無料枠のユーザー数制限に達しました "
-  },
-  {
-    "id": "api.templates.at_limit_subject",
-    "translation": "Mattermost Cloudのユーザー数制限に達しました"
-  },
-  {
-    "id": "api.templates.at_limit_info2",
-    "translation": "もしくは、管理者コンソールからユーザーを無効にすることで、無料枠のユーザー数制限のまま別のユーザーのために枠を開けることもできます。"
-  },
-  {
-    "id": "api.templates.at_limit_info1",
-    "translation": "現在、ワークスペースには10名を超えるユーザーが存在します - 素晴らしい！さらにチームメンバーを招待する予定がある場合、Mattermost Cloud Professoinalへのアップグレードを是非ご検討ください。"
-  },
-  {
     "id": "app.user.permanent_delete.app_error",
     "translation": "既存のアカウントを削除できませんでした。"
   },
@@ -7714,26 +7554,6 @@
   {
     "id": "app.channel.autofollow.app_error",
     "translation": "メンションされたユーザーについてのスレッドメンバーシップを更新できませんでした"
-  },
-  {
-    "id": "api.templates.upgrade_mattermost_cloud",
-    "translation": "アップグレードする"
-  },
-  {
-    "id": "api.templates.over_limit_title",
-    "translation": "ワークスペースのユーザー数が無料枠の制限を超えています"
-  },
-  {
-    "id": "api.templates.over_limit_subject",
-    "translation": "Mattermost Cloud Workspace ユーザー数超過"
-  },
-  {
-    "id": "api.templates.over_limit_info2",
-    "translation": "もしくは、管理者コンソールからユーザーを無効にすることで、無料枠のユーザー数制限のまま別のユーザーのために枠を開けることもできます。"
-  },
-  {
-    "id": "api.templates.over_limit_info1",
-    "translation": "ワークスペースにMattermost Cloud Professionalの無料枠を超える10名以上のユーザーがいるようです。ワークスペースの混乱を避けるために、アップグレードしてください。"
   },
   {
     "id": "model.config.is_valid.import.retention_days_too_low.app_error",
@@ -7924,100 +7744,8 @@
     "translation": "Mattermost Cloudワークスペースに関連付けられたあなたの {{.CardBrand}} ****{{.LastFour}} からの支払いを金融機関が拒否しました。"
   },
   {
-    "id": "api.templates.over_limit_suspended_title",
-    "translation": "Mattermost Cloudワークスペースの停止"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_subject",
-    "translation": "あなたのMattermost Cloudサブスクリプションは停止されました"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_info2",
-    "translation": "ワークスペースを再度有効にするには我々に連絡してください。"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_info1",
-    "translation": "あなたのMattermostワークスペースは停止されました。すべてのコンテンツやデータは1~3ヶ月以内に削除されます。"
-  },
-  {
     "id": "api.templates.over_limit_fix_now",
     "translation": "今すぐ対応する"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_title",
-    "translation": "あなたのMattermost Cloudワークスペースの停止が明日に予定されています"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_subject",
-    "translation": "あなたのMattermost Cloudサブスクリプションがもうすぐ停止されます"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info4",
-    "translation": "あなたのワークスペースが停止されると、すべてのコンテンツやデータは1~3ヶ月以内に削除されます。"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info3",
-    "translation": "あなたのワークスペースが停止されると、支払い情報が更新されるまでログインできなくなります。サービスを再び有効にするには我々のサポートチームに連絡する必要があります。"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info2",
-    "translation": "停止を避けるには、支払い情報を追加してください"
-  },
-  {
-    "id": "api.templates.over_limit_90_days_info1",
-    "translation": "これは、{{.OverLimitDate}}を過ぎてもMattermost Cloudワークスペースへの支払いがないことに対する最後の通知です。明日、あなたのサービスは停止されます。"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_title",
-    "translation": "有効な支払い方法がありません"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_subject",
-    "translation": "Mattermostサブスクリプションの支払いが滞納されています"
-  },
-  {
-    "id": "api.templates.over_limit_7_days_info1",
-    "translation": "Mattermostは自動支払いを処理できませんでした。サービスを使い続けるには、すぐに支払い情報を追加してください。でなければ、あなたのサービスが停止される可能性があります。"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_title",
-    "translation": "Mattermost Cloud ワークスペースの停止"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_subject",
-    "translation": " Mattermost Cloudサブスクリプションを使い続けるためのお願い"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item3",
-    "translation": "メッセージ履歴にへアクセスできなくなります"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item2",
-    "translation": "支払い情報を更新するには、サポートチームに連絡してください"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2_item1",
-    "translation": "ワークスペースにログインできません"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info2",
-    "translation": "作業を行わない場合、あなたのワークスペースは停止されます"
-  },
-  {
-    "id": "api.templates.over_limit_30_days_info1",
-    "translation": "支払い方法に関する問題を解決することで、Mattermost Cloudのワークスペースを有効なままにし続けることができます。ワークスペースが停止されるのを避けるために、支払い方法を更新してください。"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_title",
-    "translation": "支払いが確認できていません"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_subject",
-    "translation": "Mattermost Cloudサブスクリプションの支払いが滞納されています"
-  },
-  {
-    "id": "api.templates.over_limit_14_days_info1",
-    "translation": "{{.OverLimitDate}} に設定されたMattermostサブスクリプションの支払日までに支払いがありませんでした。支払いが確認できない場合、あなたのサービスの一時停止プロセスを開始します。"
   },
   {
     "id": "api.system.update_viewed_notices.failed",
@@ -8034,10 +7762,6 @@
   {
     "id": "api.config.get_config.restricted_merge.app_error",
     "translation": "設定をマージできませんでした。"
-  },
-  {
-    "id": "api.templates.over_limit_suspended_contact_support",
-    "translation": "サポートに連絡する"
   },
   {
     "id": "ent.compliance.global_relay.write_file.appError",
@@ -8308,22 +8032,6 @@
     "translation": "エクスポート中にファイルをコピーできませんでした。"
   },
   {
-    "id": "api.templates.upgrade_request_title",
-    "translation": "{{ .UserName }} があなたのワークスペースにメンバーを招待したいようです"
-  },
-  {
-    "id": "api.templates.upgrade_request_subject",
-    "translation": "Mattermostユーザーがワークスペースのアップグレードを要求しています"
-  },
-  {
-    "id": "api.templates.upgrade_request_info4",
-    "translation": "あなたのワークスペースが無償版Mattermost Cloudのユーザー制限に達したため、招待を送信できませんでした。追加のユーザーをあなたのワークスペースに参加させるには、アップグレードしてください。"
-  },
-  {
-    "id": "api.templates.at_limit_info5",
-    "translation": "代わりに、システムコンソールからユーザーを無効化することで、無料枠の範囲内でユーザー枠を空けることができます。"
-  },
-  {
     "id": "api.export.export_not_found.app_error",
     "translation": "エクスポートファイルが見つかりませんでした。"
   },
@@ -8381,7 +8089,7 @@
   },
   {
     "id": "api.templates.email_footer_v2",
-    "translation": "© 2021 Mattermost, Inc. 530 Lytton Avenue, Second floor, Palo Alto, CA, 94301"
+    "translation": "© 2022 Mattermost, Inc. 530 Lytton Avenue, Second floor, Palo Alto, CA, 94301"
   },
   {
     "id": "store.sql_file_info.search.disabled",
@@ -8390,10 +8098,6 @@
   {
     "id": "ent.elasticsearch.post.get_files_batch_for_indexing.error",
     "translation": "インデックス付与中にファイルを一括取得できませんでした。"
-  },
-  {
-    "id": "ent.cloud.subscription.error",
-    "translation": "クラウドサブスクリプションを取得する際にエラーが発生しました"
   },
   {
     "id": "api.templates.welcome_body.subTitle2",
@@ -8428,14 +8132,6 @@
     "translation": "もし心当たりがない場合、この電子メールを無視してください。"
   },
   {
-    "id": "api.templates.upgrade_request_title2",
-    "translation": "新規ユーザーはあなたのワークスペースに参加できませんでした"
-  },
-  {
-    "id": "api.templates.upgrade_request_info4_2",
-    "translation": "誰かがあなたのワークスペースへ参加しようとしましたが、 無料版Mattermostクラウドのユーザー数制限に達しているため参加できませんでした。さらに多くのユーザーをワークスペースに参加させるには、今すぐアップグレードしてください。"
-  },
-  {
     "id": "api.templates.questions_footer.title",
     "translation": "ご不明な点がございますか?"
   },
@@ -8444,20 +8140,8 @@
     "translation": "いつでもご連絡ください "
   },
   {
-    "id": "api.team.cloud.subscription.error",
-    "translation": "クラウドサブスクリプションを取得する際にエラーが発生しました"
-  },
-  {
     "id": "api.post.search_files.invalid_body.app_error",
     "translation": "リクエストボディを解析できませんでした。"
-  },
-  {
-    "id": "api.cloud.get_subscription.error",
-    "translation": "クラウドサブスクリプションを取得する際にエラーが発生しました。"
-  },
-  {
-    "id": "api.cloud.get_admins_emails.error",
-    "translation": "システム管理者の電子メールを取得する際にエラーが発生しました。"
   },
   {
     "id": "api.user.update_user.login_provider_attribute_set.app_error",
@@ -8521,7 +8205,7 @@
   },
   {
     "id": "api.templates.invite_body_footer.learn_more",
-    "translation": "詳しく知る"
+    "translation": "さらに詳しく"
   },
   {
     "id": "api.templates.invite_body_footer.info",
@@ -8553,7 +8237,7 @@
   },
   {
     "id": "api.templates.cloud_welcome_email.signin_sub_info2",
-    "translation": "PC、Mac、iOS、Androidで最高の体験を。"
+    "translation": "Windows、Linux、Mac、iOS、Androidで最高の体験を。"
   },
   {
     "id": "api.templates.cloud_welcome_email.signin_sub_info",
@@ -8589,7 +8273,7 @@
   },
   {
     "id": "api.templates.cloud_welcome_email.add_apps_sub_info",
-    "translation": "Github、Googleカレンダー、Chromeなどのツールを使って仕事を効率化しましょう。我々のマーケットプレースですべての統合機能をご覧ください"
+    "translation": "GitHub、Jira、Zoomなどのツールを使って仕事を効率化しましょう。我々のマーケットプレースですべての統合機能をご覧ください"
   },
   {
     "id": "api.templates.cloud_welcome_email.button",
@@ -8993,11 +8677,11 @@
   },
   {
     "id": "api.templates.cloud_trial_ending_email.subtitle",
-    "translation": "{{.Name}} さん、あなたのMattermost Cloud Professionalの14日間のトライアルは3日後の{{.TrialEnd}}に終了します。お客様のチームが引き続きCloud Professionalのメリットを享受できるよう、お支払い情報を追加してください。"
+    "translation": "{{.Name}} さん、あなたのMattermostの14日間のトライアルは3日後の{{.TrialEnd}}に終了します。お客様のチームが引き続きMattermost Cloudのメリットを享受できるよう、お支払い情報を追加してください。"
   },
   {
     "id": "api.templates.cloud_trial_ended_email.subtitle",
-    "translation": "{{.Name}}、Mattermost Cloud Professionalの14日間の無料トライアルが本日 {{.TodayDate}} 終了しました。引き続きCloud Professionalを利用するには、支払い情報を追加してください。"
+    "translation": "{{.Name}}、Mattermost Cloud Enterpriseの14日間の無料トライアルが本日 {{.TodayDate}} 終了しました。引き続きCloud Enterpriseを利用するには、支払い情報を追加してください。30日以内に支払い情報が追加されない場合、あなたのクラウドワークスペースは削除され、関連するデータもすべて失われます。"
   },
   {
     "id": "api.templates.cloud_trial_ending_email.subject",
@@ -9018,14 +8702,6 @@
   {
     "id": "api.templates.cloud_trial_ended_email.start_subscription",
     "translation": "サブスクリプションを開始する"
-  },
-  {
-    "id": "api.server.warn_metric.support_email_not_configured.start_trial.notification_body",
-    "translation": "利用者のフィードバック、電子メール通知、サポートリクエストを受け付けるために、**システムコンソール > サイト設定 > カスタマイズ**に移動し、あなたの組織の内部ITサポートデスクの電子メールアドレスを [サポート電子メールアドレス](https://docs.mattermost.com/administration/config-settings.html#support-email)として設定してください。"
-  },
-  {
-    "id": "api.server.warn_metric.support_email_not_configured.notification_title",
-    "translation": "サポート電子メールアドレスを設定してください"
   },
   {
     "id": "api.command_remote.displayname.hint",
@@ -9061,15 +8737,15 @@
   },
   {
     "id": "app.notification.footer.info",
-    "translation": " 、アカウント設定 > 通知 へ移動してください"
+    "translation": " 、設定 > 通知 へ移動してください"
   },
   {
     "id": "app.notification.body.mention.title",
-    "translation": "{{.SenderName}} がメッセージであなたについて投稿しました"
+    "translation": "{{.SenderName}} がメッセージであなたにメンションしました"
   },
   {
     "id": "app.notification.body.mention.subTitle",
-    "translation": "あなたがいない間に、{{.SenderName}} が {{.ChannelName}}チャンネルであなたについて投稿しました。"
+    "translation": "あなたがいない間に、{{.SenderName}} が {{.ChannelName}}チャンネルであなたにメンションしました。"
   },
   {
     "id": "app.notification.body.group.title",
@@ -9097,9 +8773,7 @@
   },
   {
     "id": "api.email_batching.send_batched_email_notification.title",
-    "translation": {
-      "other": "{{ .SenderName }} と 他 {{.Count}} 名があなたに新しいメッセージを送信しました"
-    }
+    "translation": "新しいメッセージがあります"
   },
   {
     "id": "api.email_batching.send_batched_email_notification.time",
@@ -9170,16 +8844,8 @@
     "translation": "管理者リストが空です。"
   },
   {
-    "id": "api.user.update_active.cloud_at_or_over_limit_check_overcapacity",
-    "translation": "クラウドアカウント数が制限を超えているため、これ以上ユーザーを増やすことはできません。"
-  },
-  {
-    "id": "api.user.update_active.cloud_at_limit_check_error",
-    "translation": "クラウドチェックに失敗したか、制限を超えています。"
-  },
-  {
     "id": "api.license.request-trial.can-start-trial.not-allowed",
-    "translation": "このMattermost Enterprise Editionのトライアルライセンスキーは期限が切れており、有効ではありません。トライアル期間の延長をご希望の場合は[セールスチームまでご連絡ください](https://mattermost.com/contact-us/)。"
+    "translation": "このMattermost Enterprise Editionのトライアルライセンスキーは期限が切れており、有効ではありません。トライアル期間の延長をご希望の場合は[営業までご連絡ください](https://mattermost.com/contact-us/)。"
   },
   {
     "id": "api.license.request-trial.can-start-trial.error",
@@ -9224,5 +8890,325 @@
   {
     "id": "api.user.invalidate_verify_email_tokens.error",
     "translation": "電子メール確認トークンを無効にする際にタイプ別のトークンを取得できませんでした"
+  },
+  {
+    "id": "api.license.upgrade_needed.app_error",
+    "translation": "この機能を利用するには、Enterprise Editionへのアップグレードが必要です。"
+  },
+  {
+    "id": "app.user.store_is_empty.app_error",
+    "translation": "ユーザーストアが空であるかどうか確認できませんでした。"
+  },
+  {
+    "id": "model.config.is_valid.collapsed_threads.autofollow.app_error",
+    "translation": "スレッドの折り畳み機能を有効にするには、ThreadAutoFollowが有効である必要があります"
+  },
+  {
+    "id": "app.post.marshal.app_error",
+    "translation": "投稿を変換できませんでした。"
+  },
+  {
+    "id": "app.notification.body.thread.title",
+    "translation": "{{.SenderName}} がスレッドへ返信しました"
+  },
+  {
+    "id": "api.unmarshal_error",
+    "translation": "復元できませんでした。"
+  },
+  {
+    "id": "api.push_notification.title.collapsed_threads",
+    "translation": "{{.channelName}} へ返信する"
+  },
+  {
+    "id": "api.post.send_notification_and_forget.push_comment_on_crt_thread",
+    "translation": " フォローしているスレッドへ返信がありました。"
+  },
+  {
+    "id": "api.config.reload_config.app_error",
+    "translation": "設定をリロードできませんでした。"
+  },
+  {
+    "id": "app.notification.body.thread_channel.subTitle",
+    "translation": "あなたが離席中に、あなたがフォローしているスレッドへ {{.SenderName}} が返信しました。"
+  },
+  {
+    "id": "app.notification.body.thread_gm.subTitle",
+    "translation": "あなたが離席中に、{{.SenderName}}があなたのグループのスレッドに返信しました。"
+  },
+  {
+    "id": "app.notification.body.thread_dm.subTitle",
+    "translation": "あなたが離席中に、{{.SenderName}} がダイレクトメッセージのスレッドに返信しました。"
+  },
+  {
+    "id": "app.notification.body.thread_channel_full.subTitle",
+    "translation": "あなたが離席中に、{{.ChannelName}} であなたがフォローしているスレッドに {{.SenderName}} が返信しました。"
+  },
+  {
+    "id": "api.push_notification.title.collapsed_threads_dm",
+    "translation": "ダイレクトメッセージへ返信する"
+  },
+  {
+    "id": "api.post.send_notification_and_forget.push_comment_on_crt_thread_dm",
+    "translation": " がスレッドへ返信しました。"
+  },
+  {
+    "id": "app.import.bulk_import.process_attachments.error",
+    "translation": "添付ファイルの一括インポート中にエラーが発生しました。"
+  },
+  {
+    "id": "model.user.is_valid.roles_limit.app_error",
+    "translation": "{{.Limit}}文字以上の不正なユーザーの役割です。"
+  },
+  {
+    "id": "model.team_member.is_valid.roles_limit.app_error",
+    "translation": "{{.Limit}} 文字より長い不正なチームメンバーの役割です。"
+  },
+  {
+    "id": "model.session.is_valid.user_id.app_error",
+    "translation": "セッションのUserIdフィールドが無効です。"
+  },
+  {
+    "id": "model.channel_member.is_valid.roles_limit.app_error",
+    "translation": "{{.Limit}} 文字より長い不正なチャンネルメンバーの役割です。"
+  },
+  {
+    "id": "model.session.is_valid.roles_limit.app_error",
+    "translation": "{{.Limit}}文字以上の不正なセッションロールです。"
+  },
+  {
+    "id": "model.session.is_valid.id.app_error",
+    "translation": "セッションのIdフィールドが無効です。"
+  },
+  {
+    "id": "model.session.is_valid.create_at.app_error",
+    "translation": "セッションのCreateAtフィールドが無効です。"
+  },
+  {
+    "id": "api.user.create_user.bad_token_email_data.app_error",
+    "translation": "トークンの電子メールアドレスがユーザーデータのものと一致しません。"
+  },
+  {
+    "id": "ent.elasticsearch.getAllTeamMembers.error",
+    "translation": "すべてのチームメンバーを取得できませんでした"
+  },
+  {
+    "id": "ent.elasticsearch.getAllChannelMembers.error",
+    "translation": "すべてのチャンネルメンバーを取得できませんでした"
+  },
+  {
+    "id": "api.custom_status.set_custom_statuses.update.app_error",
+    "translation": "カスタムステータスを更新できませんでした。絵文字とテキストステータスのどちらかまたは両方を指定してください。"
+  },
+  {
+    "id": "app.user.get_thread_count_for_user.app_error",
+    "translation": "そのユーザーのスレッド数を取得できませんでした。"
+  },
+  {
+    "id": "app.session.extend_session_expiry.app_error",
+    "translation": "セッションの長さを延長できませんでした"
+  },
+  {
+    "id": "app.role.get_all.app_error",
+    "translation": "全ての役割を取得できませんでした。"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_users_in_channel.app_error",
+    "translation": "アーカイブされたチャネルのユーザーを取得できません"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_posts_for_channel.app_error",
+    "translation": "アーカイブされたチャンネルの投稿を取得できません"
+  },
+  {
+    "id": "api.templates.invite_body.title.reminder",
+    "translation": "リマインダー"
+  },
+  {
+    "id": "api.post.posts_by_ids.invalid_body.request_error",
+    "translation": "受信したPost IDの数が{{.MaxLength}}の最大サイズを超えています"
+  },
+  {
+    "id": "api.license.request_renewal_link.cannot_renew_on_cws",
+    "translation": "ポータルでこのライセンスを更新することはできません"
+  },
+  {
+    "id": "app.system.complete_onboarding_request.no_first_user",
+    "translation": "オンボーディングの完了はシステム管理者のみが行えます。"
+  },
+  {
+    "id": "app.system.complete_onboarding_request.app_error",
+    "translation": "オンボーディングの完了リクエストをデコードできませんでした。"
+  },
+  {
+    "id": "app.admin.latest_version_read_all.failure",
+    "translation": " "
+  },
+  {
+    "id": "app.admin.latest_version_external_error.failure",
+    "translation": " "
+  },
+  {
+    "id": "api.user.authorize_oauth_user.saml_response_too_long.app_error",
+    "translation": "SAMLの応答が長すぎます"
+  },
+  {
+    "id": "api.custom_groups.no_remote_id",
+    "translation": "カスタムグループの場合、remote_idは空白でなければなりません"
+  },
+  {
+    "id": "api.custom_groups.must_be_referenceable",
+    "translation": "カスタムグループの場合、allow_referenceは 'true'でなければなりません"
+  },
+  {
+    "id": "api.custom_groups.license_error",
+    "translation": "カスタムグループのためのライセンスがありません"
+  },
+  {
+    "id": "api.custom_groups.feature_disabled",
+    "translation": "カスタムグループ機能は無効化されています"
+  },
+  {
+    "id": "api.custom_groups.count_err",
+    "translation": "グループのカウント中にエラーが発生しました"
+  },
+  {
+    "id": "Playbooks",
+    "translation": "プレイブック"
+  },
+  {
+    "id": "Channels",
+    "translation": "チャンネル"
+  },
+  {
+    "id": "Boards",
+    "translation": "ボード"
+  },
+  {
+    "id": "model.github_release_info.is_valid.id.app_error",
+    "translation": " "
+  },
+  {
+    "id": "model.emoji.system_emoji_name.app_error",
+    "translation": "既存のシステム絵文字名と名前が競合しています。"
+  },
+  {
+    "id": "app.system.get_onboarding_request.app_error",
+    "translation": "オンボーディングの完了ステータスの取得に失敗しました。"
+  },
+  {
+    "id": "app.member_count",
+    "translation": "メンバー数をカウントする際にエラーが発生しました"
+  },
+  {
+    "id": "app.job.get_all_jobs_by_type_and_status.app_error",
+    "translation": "typeとstatusによる全ジョブ取得に失敗しました。"
+  },
+  {
+    "id": "app.group.crud_permission",
+    "translation": "そのsource typeに対して操作を行うことができません。"
+  },
+  {
+    "id": "app.custom_group.unique_name",
+    "translation": "グループ名が重複しています"
+  },
+  {
+    "id": "app.admin.latest_version_unmarshal.failure",
+    "translation": " "
+  },
+  {
+    "id": "app.admin.latest_version_set_cache.failure",
+    "translation": " "
+  },
+  {
+    "id": "api.users.invalid_emails.enable_open_server.app_error",
+    "translation": " "
+  },
+  {
+    "id": "api.templates.server_inactivity_title",
+    "translation": "これらの機能による生産性の向上をアンロックする"
+  },
+  {
+    "id": "api.templates.server_inactivity_subtitle",
+    "translation": "{{.Name}} さん、あなたのMattermostサーバーが少し埃をかぶっていることに気づきました。チームの作業負荷を軽減するのに役立ついくつかの機能を確認してみてください。"
+  },
+  {
+    "id": "api.templates.server_inactivity_subject",
+    "translation": "Mattermostを開いてチームの生産性を向上しましょう!"
+  },
+  {
+    "id": "api.templates.server_inactivity_info_bullet2",
+    "translation": "タスク管理のための "
+  },
+  {
+    "id": "api.templates.server_inactivity_info_bullet1",
+    "translation": "ワークフロー管理のための "
+  },
+  {
+    "id": "api.templates.server_inactivity_info_bullet",
+    "translation": "ゲストアクセス可能な "
+  },
+  {
+    "id": "api.templates.server_inactivity_info",
+    "translation": "ぜひご覧ください!"
+  },
+  {
+    "id": "api.templates.server_inactivity_button",
+    "translation": "Mattermostを開く"
+  },
+  {
+    "id": "api.license_error",
+    "translation": "APIエンドポイントにはライセンスが必要です"
+  },
+  {
+    "id": "api.error_set_first_admin_complete_setup",
+    "translation": "ストアに最初の管理者向けセットアップを保存する際にエラーが発生しました。"
+  },
+  {
+    "id": "api.error_get_first_admin_complete_setup",
+    "translation": "ストアから最初の管理者向けセットアップを取得する際にエラーが発生しました。"
+  },
+  {
+    "id": "app.prepackged-plugin.invalid_version.app_error",
+    "translation": "パッケージ済みプラグインのバージョンを解析できませんでした。"
+  },
+  {
+    "id": "api.team.invite_members.unable_to_send_email_with_defaults.app_error",
+    "translation": "システムコンソールでSMTPが設定されていません"
+  },
+  {
+    "id": "api.team.invite_members.unable_to_send_email.app_error",
+    "translation": "メール送信時にエラーが発生しました"
+  },
+  {
+    "id": "app.user.group_name_conflict",
+    "translation": " "
+  },
+  {
+    "id": "app.user.get_by_name_failure",
+    "translation": " "
+  },
+  {
+    "id": "app.group.username_conflict",
+    "translation": " "
+  },
+  {
+    "id": "app.group.get_by_username_failure",
+    "translation": " "
+  },
+  {
+    "id": "model.oauth.is_valid.mattermost_app_id.app_error",
+    "translation": "MattermostAppIDの最大文字数は32文字です。"
+  },
+  {
+    "id": "model.config.is_valid.elastic_search.bulk_indexing_batch_size.app_error",
+    "translation": "Elasticsearch Bulk Indexing Batch Sizeは{{.BatchSize}}以上である必要があります。"
+  },
+  {
+    "id": "model.config.is_valid.bleve_search.bulk_indexing_batch_size.app_error",
+    "translation": "Bleve Bulk Indexing Batch Sizeは{{.BatchSize}}以上である必要があります。"
+  },
+  {
+    "id": "app.channel.get_file_count.app_error",
+    "translation": "チャンネルのファイル数を取得できませんでした"
   }
 ]

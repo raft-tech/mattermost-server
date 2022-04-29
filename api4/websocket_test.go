@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func TestWebSocketTrailingSlash(t *testing.T) {
 	defer th.TearDown()
 
 	url := fmt.Sprintf("ws://localhost:%v", th.App.Srv().ListenAddr.Port)
-	_, _, err := websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket/", nil)
+	_, _, err := websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket/", nil)
 	require.NoError(t, err)
 }
 
@@ -30,7 +31,7 @@ func TestWebSocketEvent(t *testing.T) {
 	defer th.TearDown()
 
 	WebSocketClient, err := th.CreateWebSocketClient()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer WebSocketClient.Close()
 
 	WebSocketClient.Listen()
@@ -98,7 +99,7 @@ func TestCreateDirectChannelWithSocket(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
-	Client := th.Client
+	client := th.Client
 	user2 := th.BasicUser2
 
 	users := make([]*model.User, 0)
@@ -109,7 +110,7 @@ func TestCreateDirectChannelWithSocket(t *testing.T) {
 	}
 
 	WebSocketClient, err := th.CreateWebSocketClient()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer WebSocketClient.Close()
 	WebSocketClient.Listen()
 
@@ -138,8 +139,8 @@ func TestCreateDirectChannelWithSocket(t *testing.T) {
 
 	for _, user := range users {
 		time.Sleep(100 * time.Millisecond)
-		_, resp := Client.CreateDirectChannel(th.BasicUser.Id, user.Id)
-		require.Nil(t, resp.Error, "failed to create DM channel")
+		_, _, err := client.CreateDirectChannel(th.BasicUser.Id, user.Id)
+		require.NoError(t, err, "failed to create DM channel")
 	}
 
 	time.Sleep(5000 * time.Millisecond)
@@ -156,42 +157,42 @@ func TestWebsocketOriginSecurity(t *testing.T) {
 	url := fmt.Sprintf("ws://localhost:%v", th.App.Srv().ListenAddr.Port)
 
 	// Should fail because origin doesn't match
-	_, _, err := websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err := websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{"http://www.evil.com"},
 	})
 
 	require.Error(t, err, "Should have errored because Origin does not match host! SECURITY ISSUE!")
 
 	// We are not a browser so we can spoof this just fine
-	_, _, err = websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err = websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{fmt.Sprintf("http://localhost:%v", th.App.Srv().ListenAddr.Port)},
 	})
 	require.NoError(t, err, err)
 
 	// Should succeed now because open CORS
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.AllowCorsFrom = "*" })
-	_, _, err = websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err = websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{"http://www.evil.com"},
 	})
 	require.NoError(t, err, err)
 
 	// Should succeed now because matching CORS
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.AllowCorsFrom = "http://www.evil.com" })
-	_, _, err = websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err = websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{"http://www.evil.com"},
 	})
 	require.NoError(t, err, err)
 
 	// Should fail because non-matching CORS
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.AllowCorsFrom = "http://www.good.com" })
-	_, _, err = websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err = websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{"http://www.evil.com"},
 	})
 	require.Error(t, err, "Should have errored because Origin contain AllowCorsFrom")
 
 	// Should fail because non-matching CORS
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.AllowCorsFrom = "http://www.good.com" })
-	_, _, err = websocket.DefaultDialer.Dial(url+model.ApiUrlSuffix+"/websocket", http.Header{
+	_, _, err = websocket.DefaultDialer.Dial(url+model.APIURLSuffix+"/websocket", http.Header{
 		"Origin": []string{"http://www.good.co"},
 	})
 	require.Error(t, err, "Should have errored because Origin does not match host! SECURITY ISSUE!")
@@ -199,13 +200,88 @@ func TestWebsocketOriginSecurity(t *testing.T) {
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.AllowCorsFrom = "" })
 }
 
+func TestWebSocketReconnectRace(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+
+	WebSocketClient, err := th.CreateWebSocketClient()
+	require.NoError(t, err)
+	defer WebSocketClient.Close()
+	WebSocketClient.Listen()
+
+	ev := <-WebSocketClient.EventChannel
+	require.Equal(t, model.WebsocketEventHello, ev.EventType())
+	evData := ev.GetData()
+	connID := evData["connection_id"].(string)
+	seq := int(ev.GetSequence())
+
+	var wg sync.WaitGroup
+	n := 10
+	wg.Add(n)
+
+	WebSocketClient.Close()
+
+	for i := 0; i < n; i++ {
+		go func() {
+			defer wg.Done()
+			ws, err := th.CreateReliableWebSocketClient(connID, seq+1)
+			require.NoError(t, err)
+			defer ws.Close()
+			ws.Listen()
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestWebSocketSendBinary(t *testing.T) {
+	th := Setup(t).InitBasic()
+	defer th.TearDown()
+
+	client := th.CreateClient()
+	th.LoginBasicWithClient(client)
+	WebSocketClient, err := th.CreateWebSocketClientWithClient(client)
+	require.NoError(t, err)
+	defer WebSocketClient.Close()
+	WebSocketClient.Listen()
+	resp := <-WebSocketClient.ResponseChannel
+	require.Equal(t, resp.Status, model.StatusOk)
+
+	client2 := th.CreateClient()
+	th.LoginBasic2WithClient(client2)
+	WebSocketClient2, err := th.CreateWebSocketClientWithClient(client2)
+	require.NoError(t, err)
+	defer WebSocketClient2.Close()
+
+	time.Sleep(1000 * time.Millisecond)
+
+	WebSocketClient.SendBinaryMessage("get_statuses", nil)
+	resp = <-WebSocketClient.ResponseChannel
+	require.Nil(t, resp.Error, resp.Error)
+	require.Equal(t, resp.SeqReply, WebSocketClient.Sequence-1)
+
+	status, ok := resp.Data[th.BasicUser.Id]
+	require.True(t, ok)
+	require.Equal(t, model.StatusOnline, status)
+	status, ok = resp.Data[th.BasicUser2.Id]
+	require.True(t, ok)
+	require.Equal(t, model.StatusOnline, status)
+
+	WebSocketClient.SendBinaryMessage("get_statuses_by_ids", map[string]interface{}{
+		"user_ids": []string{th.BasicUser2.Id},
+	})
+	status, ok = resp.Data[th.BasicUser2.Id]
+	require.True(t, ok)
+	require.Equal(t, model.StatusOnline, status)
+}
+
 func TestWebSocketStatuses(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
-	Client := th.Client
+	client := th.Client
 	WebSocketClient, err := th.CreateWebSocketClient()
-	require.Nil(t, err, err)
+	require.NoError(t, err)
 	defer WebSocketClient.Close()
 	WebSocketClient.Listen()
 
@@ -213,26 +289,28 @@ func TestWebSocketStatuses(t *testing.T) {
 	require.Equal(t, resp.Status, model.StatusOk, "should have responded OK to authentication challenge")
 
 	team := model.Team{DisplayName: "Name", Name: "z-z-" + model.NewRandomTeamName() + "a", Email: "test@nowhere.com", Type: model.TeamOpen}
-	rteam, _ := Client.CreateTeam(&team)
+	rteam, _, _ := client.CreateTeam(&team)
 
 	user := model.User{Email: strings.ToLower(model.NewId()) + "success+test@simulator.amazonses.com", Nickname: "Corey Hulen", Password: "passwd1"}
-	ruser := Client.Must(Client.CreateUser(&user)).(*model.User)
+	ruser, _, err := client.CreateUser(&user)
+	require.NoError(t, err)
 	th.LinkUserToTeam(ruser, rteam)
-	_, nErr := th.App.Srv().Store.User().VerifyEmail(ruser.Id, ruser.Email)
-	require.NoError(t, nErr)
+	_, err = th.App.Srv().Store.User().VerifyEmail(ruser.Id, ruser.Email)
+	require.NoError(t, err)
 
 	user2 := model.User{Email: strings.ToLower(model.NewId()) + "success+test@simulator.amazonses.com", Nickname: "Corey Hulen", Password: "passwd1"}
-	ruser2 := Client.Must(Client.CreateUser(&user2)).(*model.User)
+	ruser2, _, err := client.CreateUser(&user2)
+	require.NoError(t, err)
 	th.LinkUserToTeam(ruser2, rteam)
-	_, nErr = th.App.Srv().Store.User().VerifyEmail(ruser2.Id, ruser2.Email)
-	require.NoError(t, nErr)
+	_, err = th.App.Srv().Store.User().VerifyEmail(ruser2.Id, ruser2.Email)
+	require.NoError(t, err)
 
-	Client.Login(user.Email, user.Password)
+	client.Login(user.Email, user.Password)
 
 	th.LoginBasic2()
 
-	WebSocketClient2, err2 := th.CreateWebSocketClient()
-	require.Nil(t, err2, err2)
+	WebSocketClient2, err := th.CreateWebSocketClient()
+	require.NoError(t, err)
 
 	time.Sleep(1000 * time.Millisecond)
 

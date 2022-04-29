@@ -5,6 +5,7 @@ package web
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,7 @@ type Params struct {
 	TokenId                   string
 	ThreadId                  string
 	Timestamp                 int64
+	TimeRange                 string
 	ChannelId                 string
 	PostId                    string
 	PolicyId                  string
@@ -86,6 +88,8 @@ type Params struct {
 	WarnMetricId              string
 	ExportName                string
 	ExcludePolicyConstrained  bool
+	GroupSource               model.GroupSource
+	FilterHasMember           string
 
 	// Cloud
 	InvoiceId string
@@ -251,18 +255,13 @@ func ParamsFromRequest(r *http.Request) *Params {
 		params.Timestamp = val
 	}
 
+	params.TimeRange = query.Get("time_range")
+
 	if val, err := strconv.ParseBool(query.Get("permanent")); err == nil {
 		params.Permanent = val
 	}
 
-	if val, err := strconv.Atoi(query.Get("per_page")); err != nil || val < 0 {
-		params.PerPage = PerPageDefault
-	} else if val > PerPageMaximum {
-		params.PerPage = PerPageMaximum
-	} else {
-		params.PerPage = val
-	}
-
+	params.PerPage = getPerPageFromQuery(query)
 	if val, err := strconv.Atoi(query.Get("logs_per_page")); err != nil || val < 0 {
 		params.LogsPerPage = LogsPerPageDefault
 	} else if val > LogsPerPageMaximum {
@@ -361,5 +360,35 @@ func ParamsFromRequest(r *http.Request) *Params {
 		params.ExcludePolicyConstrained = val
 	}
 
+	if val := query.Get("group_source"); val != "" {
+		switch val {
+		case "custom":
+			params.GroupSource = model.GroupSourceCustom
+		case "ldap":
+			params.GroupSource = model.GroupSourceLdap
+		default:
+			params.GroupSource = model.GroupSourceLdap
+		}
+	}
+
+	params.FilterHasMember = query.Get("filter_has_member")
+
 	return params
+}
+
+// getPerPageFromQuery returns the PerPage value from the given query.
+// This function should be removed and the support for `pageSize`
+// should be dropped after v1.46 of the mobile app is no longer supported
+// https://mattermost.atlassian.net/browse/MM-38131
+func getPerPageFromQuery(query url.Values) int {
+	val, err := strconv.Atoi(query.Get("per_page"))
+	if err != nil {
+		val, err = strconv.Atoi(query.Get("pageSize"))
+	}
+	if err != nil || val < 0 {
+		return PerPageDefault
+	} else if val > PerPageMaximum {
+		return PerPageMaximum
+	}
+	return val
 }

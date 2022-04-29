@@ -48,9 +48,14 @@ func testOAuthStoreSaveApp(t *testing.T, ss store.Store) {
 	_, err = ss.OAuth().SaveApp(&a1)
 	require.Error(t, err, "Should have failed, app should be invalid cause it doesn' have a name set")
 
+	a1.Name = "TestApp" + model.NewId() // Valid name
+	a1.MattermostAppID = "a very, very, very, very, very, very, very long id"
+	_, err = ss.OAuth().SaveApp(&a1)
+	require.Error(t, err, "Should have failed, app should be invalid cause the MattermostAppID is to long")
+
 	// Save the app
 	a1.Id = ""
-	a1.Name = "TestApp" + model.NewId()
+	a1.MattermostAppID = "some small id" // Valid id
 	_, err = ss.OAuth().SaveApp(&a1)
 	require.NoError(t, err)
 }
@@ -305,7 +310,7 @@ func testOAuthGetAuthorizedApps(t *testing.T, ss store.Store) {
 	p.Category = model.PreferenceCategoryAuthorizedOAuthApp
 	p.Name = a1.Id
 	p.Value = "true"
-	nErr := ss.Preference().Save(&model.Preferences{p})
+	nErr := ss.Preference().Save(model.Preferences{p})
 	require.NoError(t, nErr)
 
 	apps, err = ss.OAuth().GetAuthorizedApps(a1.CreatorId, 0, 1000)
@@ -328,7 +333,7 @@ func testOAuthGetAccessDataByUserForApp(t *testing.T, ss store.Store) {
 	p.Category = model.PreferenceCategoryAuthorizedOAuthApp
 	p.Name = a1.Id
 	p.Value = "true"
-	nErr := ss.Preference().Save(&model.Preferences{p})
+	nErr := ss.Preference().Save(model.Preferences{p})
 	require.NoError(t, nErr)
 
 	apps, err := ss.OAuth().GetAuthorizedApps(a1.CreatorId, 0, 1000)

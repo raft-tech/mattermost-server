@@ -61,6 +61,20 @@ func TestGetRoleByID(t *testing.T) {
 	})
 }
 
+func TestGetAllRoles(t *testing.T) {
+	testPermissionInheritance(t, func(t *testing.T, th *TestHelper, testData permissionInheritanceTestData) {
+		actualRoles, err := th.App.GetAllRoles()
+		require.Nil(t, err)
+		for _, actualRole := range actualRoles {
+			if actualRole.Id == testData.channelRole.Id {
+				require.NotNil(t, actualRole)
+				require.Equal(t, testData.channelRole.Id, actualRole.Id)
+				require.Equal(t, testData.shouldHavePermission, utils.StringInSlice(testData.permission.Id, actualRole.Permissions), "row: %+v", testData.truthTableRow)
+			}
+		}
+	})
+}
+
 // testPermissionInheritance tests 48 combinations of scheme, permission, role data.
 func testPermissionInheritance(t *testing.T, testCallback func(t *testing.T, th *TestHelper, testData permissionInheritanceTestData)) {
 	th := Setup(t).InitBasic()
@@ -221,7 +235,7 @@ func testPermissionInheritance(t *testing.T, testCallback func(t *testing.T, th 
 
 	// assign the scheme to the team
 	team.SchemeId = &teamScheme.Id
-	team, err = th.App.UpdateTeamScheme(team)
+	_, err = th.App.UpdateTeamScheme(team)
 	require.Nil(t, err)
 
 	// test 24 combinations where the higher-scoped scheme is a TEAM scheme

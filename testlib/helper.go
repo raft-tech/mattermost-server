@@ -16,7 +16,6 @@ import (
 
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/services/searchengine"
-	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"github.com/mattermost/mattermost-server/v6/store"
 	"github.com/mattermost/mattermost-server/v6/store/searchlayer"
 	"github.com/mattermost/mattermost-server/v6/store/sqlstore"
@@ -52,16 +51,6 @@ func NewMainHelper() *MainHelper {
 func NewMainHelperWithOptions(options *HelperOptions) *MainHelper {
 	var mainHelper MainHelper
 	flag.Parse()
-
-	// Setup a global logger to catch tests logging outside of app context
-	// The global logger will be stomped by apps initializing but that's fine for testing.
-	// Ideally this won't happen.
-	mlog.InitGlobalLogger(mlog.NewLogger(&mlog.LoggerConfiguration{
-		EnableConsole: true,
-		ConsoleJson:   true,
-		ConsoleLevel:  "error",
-		EnableFile:    false,
-	}))
 
 	utils.TranslationsPreInit()
 
@@ -113,7 +102,7 @@ func (h *MainHelper) setupStore(withReadReplica bool) {
 	config := &model.Config{}
 	config.SetDefaults()
 
-	h.SearchEngine = searchengine.NewBroker(config, nil)
+	h.SearchEngine = searchengine.NewBroker(config)
 	h.ClusterInterface = &FakeClusterInterface{}
 	h.SQLStore = sqlstore.New(*h.Settings, nil)
 	h.Store = searchlayer.NewSearchLayer(&TestStore{
@@ -191,7 +180,7 @@ func (h *MainHelper) PreloadMigrations() {
 			panic(fmt.Errorf("cannot read file: %v", err))
 		}
 	}
-	handle := h.SQLStore.GetMaster()
+	handle := h.SQLStore.GetMasterX()
 	_, err = handle.Exec(string(buf))
 	if err != nil {
 		panic(errors.Wrap(err, "Error preloading migrations. Check if you have &multiStatements=true in your DSN if you are using MySQL. Or perhaps the schema changed? If yes, then update the warmup files accordingly"))
@@ -282,7 +271,7 @@ func (h *MainHelper) SetReplicationLagForTesting(seconds int) error {
 }
 
 func (h *MainHelper) execOnEachReplica(query string, args ...interface{}) error {
-	for _, replica := range h.SQLStore.Replicas {
+	for _, replica := range h.SQLStore.ReplicaXs {
 		_, err := replica.Exec(query, args...)
 		if err != nil {
 			return err

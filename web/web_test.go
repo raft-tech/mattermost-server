@@ -27,7 +27,7 @@ import (
 	"github.com/mattermost/mattermost-server/v6/utils"
 )
 
-var ApiClient *model.Client4
+var apiClient *model.Client4
 var URL string
 
 type TestHelper struct {
@@ -45,6 +45,8 @@ type TestHelper struct {
 	tempWorkspace string
 
 	IncludeCacheLayer bool
+
+	TestLogger *mlog.Logger
 }
 
 func SetupWithStoreMock(tb testing.TB) *TestHelper {
@@ -52,7 +54,7 @@ func SetupWithStoreMock(tb testing.TB) *TestHelper {
 		tb.SkipNow()
 	}
 
-	th := setupTestHelper(false)
+	th := setupTestHelper(tb, false)
 	emptyMockStore := mocks.Store{}
 	emptyMockStore.On("Close").Return(nil)
 	th.App.Srv().Store = &emptyMockStore
@@ -65,10 +67,10 @@ func Setup(tb testing.TB) *TestHelper {
 	}
 	store := mainHelper.GetStore()
 	store.DropAllTables()
-	return setupTestHelper(true)
+	return setupTestHelper(tb, true)
 }
 
-func setupTestHelper(includeCacheLayer bool) *TestHelper {
+func setupTestHelper(tb testing.TB, includeCacheLayer bool) *TestHelper {
 	memoryStore := config.NewTestMemoryStore()
 	newConfig := memoryStore.Get().Clone()
 	*newConfig.AnnouncementSettings.AdminNoticesEnabled = false
@@ -79,7 +81,14 @@ func setupTestHelper(includeCacheLayer bool) *TestHelper {
 	options = append(options, app.ConfigStore(memoryStore))
 	options = append(options, app.StoreOverride(mainHelper.Store))
 
-	mlog.DisableZap()
+	testLogger, _ := mlog.NewLogger()
+	logCfg, _ := config.MloggerConfigFromLoggerConfig(&newConfig.LogSettings, nil, config.GetLogFileLocation)
+	if errCfg := testLogger.ConfigureTargets(logCfg, nil); errCfg != nil {
+		panic("failed to configure test logger: " + errCfg.Error())
+	}
+	// lock logger config so server init cannot override it during testing.
+	testLogger.LockConfiguration()
+	options = append(options, app.SetLogger(testLogger))
 
 	s, err := app.NewServer(options...)
 	if err != nil {
@@ -111,11 +120,11 @@ func setupTestHelper(includeCacheLayer bool) *TestHelper {
 	})
 
 	ctx := &request.Context{}
-	a := app.New(app.ServerConnector(s))
+	a := app.New(app.ServerConnector(s.Channels()))
 
-	web := New(a, s.Router)
+	web := New(s)
 	URL = fmt.Sprintf("http://localhost:%v", s.ListenAddr.Port)
-	ApiClient = model.NewAPIv4Client(URL)
+	apiClient = model.NewAPIv4Client(URL)
 
 	s.Store.MarkSystemRanUnitTests()
 
@@ -129,6 +138,7 @@ func setupTestHelper(includeCacheLayer bool) *TestHelper {
 		Server:            s,
 		Web:               web,
 		IncludeCacheLayer: includeCacheLayer,
+		TestLogger:        testLogger,
 	}
 
 	return th
@@ -317,7 +327,7 @@ func TestPublicFilesRequest(t *testing.T) {
 	require.NotNil(t, manifest)
 	require.True(t, activated)
 
-	th.App.SetPluginsEnvironment(env)
+	th.App.Channels().SetPluginsEnvironment(env)
 
 	req, _ := http.NewRequest("GET", "/plugins/com.mattermost.sample/public/hello.html", nil)
 	res := httptest.NewRecorder()
@@ -335,7 +345,7 @@ func TestPublicFilesRequest(t *testing.T) {
 	assert.Equal(t, 301, res.Code)
 }
 
-/* Test disabled for now so we don't requrie the client to build. Maybe re-enable after client gets moved out.
+/* Test disabled for now so we don't require the client to build. Maybe re-enable after client gets moved out.
 func TestStatic(t *testing.T) {
 	Setup()
 

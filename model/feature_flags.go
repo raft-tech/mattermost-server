@@ -16,48 +16,83 @@ type FeatureFlags struct {
 	// all other values as false.
 	TestBoolFeature bool
 
-	// Toggle on and off scheduled jobs for cloud user limit emails see MM-29999
-	CloudDelinquentEmailJobsEnabled bool
-
 	// Toggle on and off support for Collapsed Threads
 	CollapsedThreads bool
 
 	// Enable the remote cluster service for shared channels.
 	EnableRemoteClusterService bool
 
-	// AppsEnabled toggle the Apps framework functionalities both in server and client side
+	// AppsEnabled toggles the Apps framework functionalities both in server and client side
 	AppsEnabled bool
 
+	// AppBarEnabled toggles the App Bar component on client side
+	AppBarEnabled bool
+
 	// Feature flags to control plugin versions
-	PluginIncidentManagement string `plugin_id:"com.mattermost.plugin-incident-management"`
-	PluginApps               string `plugin_id:"com.mattermost.apps"`
-	PluginFocalboard         string `plugin_id:"focalboard"`
+	PluginPlaybooks  string `plugin_id:"playbooks"`
+	PluginApps       string `plugin_id:"com.mattermost.apps"`
+	PluginFocalboard string `plugin_id:"focalboard"`
 
-	// Enable timed dnd support for user status
-	TimedDND bool
+	PermalinkPreviews bool
 
-	// Enable the Global Header
-	GlobalHeader bool
+	// Enable Calls plugin support in the mobile app
+	CallsMobile bool
 
-	// Enable the Invite Members button on the left panel, possible values = ("none", "sticky", "lhs_button", "user_icon")
-	InviteMembersButton string
+	// A dash separated list for feature flags to turn on for Boards
+	BoardsFeatureFlags string
+
+	// Enable Create First Channel
+	GuidedChannelCreation bool
+
+	// A/B test for whether radio buttons or toggle button is more effective in in-screen invite to team modal ("none", "toggle")
+	InviteToTeam string
+
+	CustomGroups bool
+
+	// Enable DataRetention for Boards
+	BoardsDataRetention bool
+
+	NormalizeLdapDNs bool
+
+	EnableInactivityCheckJob bool
+
+	// Enable special onboarding flow for first admin
+	UseCaseOnboarding bool
+
+	// Enable GraphQL feature
+	GraphQL bool
+
+	InsightsEnabled bool
+
+	CloudFree bool
+
+	CommandPalette bool
 }
 
 func (f *FeatureFlags) SetDefaults() {
 	f.TestFeature = "off"
 	f.TestBoolFeature = false
-	f.CloudDelinquentEmailJobsEnabled = false
 	f.CollapsedThreads = true
 	f.EnableRemoteClusterService = false
-	f.AppsEnabled = false
-	f.PluginIncidentManagement = "1.14.3"
+	f.AppsEnabled = true
+	f.AppBarEnabled = false
 	f.PluginApps = ""
 	f.PluginFocalboard = ""
-	f.TimedDND = false
-	f.GlobalHeader = false
-	f.InviteMembersButton = "none"
+	f.PermalinkPreviews = true
+	f.CallsMobile = false
+	f.BoardsFeatureFlags = ""
+	f.GuidedChannelCreation = false
+	f.InviteToTeam = "none"
+	f.CustomGroups = true
+	f.BoardsDataRetention = false
+	f.NormalizeLdapDNs = false
+	f.EnableInactivityCheckJob = true
+	f.UseCaseOnboarding = true
+	f.GraphQL = false
+	f.InsightsEnabled = false
+	f.CloudFree = false
+	f.CommandPalette = false
 }
-
 func (f *FeatureFlags) Plugins() map[string]string {
 	rFFVal := reflect.ValueOf(f).Elem()
 	rFFType := reflect.TypeOf(f).Elem()

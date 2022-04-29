@@ -44,22 +44,23 @@ type ChannelImportData struct {
 }
 
 type UserImportData struct {
-	ProfileImage       *string `json:"profile_image,omitempty"`
-	Username           *string `json:"username"`
-	Email              *string `json:"email"`
-	AuthService        *string `json:"auth_service"`
-	AuthData           *string `json:"auth_data,omitempty"`
-	Password           *string `json:"password,omitempty"`
-	Nickname           *string `json:"nickname"`
-	FirstName          *string `json:"first_name"`
-	LastName           *string `json:"last_name"`
-	Position           *string `json:"position"`
-	Roles              *string `json:"roles"`
-	Locale             *string `json:"locale"`
-	UseMarkdownPreview *string `json:"feature_enabled_markdown_preview,omitempty"`
-	UseFormatting      *string `json:"formatting,omitempty"`
-	ShowUnreadSection  *string `json:"show_unread_section,omitempty"`
-	DeleteAt           *int64  `json:"delete_at,omitempty"`
+	ProfileImage       *string   `json:"profile_image,omitempty"`
+	ProfileImageData   *zip.File `json:"-"`
+	Username           *string   `json:"username"`
+	Email              *string   `json:"email"`
+	AuthService        *string   `json:"auth_service"`
+	AuthData           *string   `json:"auth_data,omitempty"`
+	Password           *string   `json:"password,omitempty"`
+	Nickname           *string   `json:"nickname"`
+	FirstName          *string   `json:"first_name"`
+	LastName           *string   `json:"last_name"`
+	Position           *string   `json:"position"`
+	Roles              *string   `json:"roles"`
+	Locale             *string   `json:"locale"`
+	UseMarkdownPreview *string   `json:"feature_enabled_markdown_preview,omitempty"`
+	UseFormatting      *string   `json:"formatting,omitempty"`
+	ShowUnreadSection  *string   `json:"show_unread_section,omitempty"`
+	DeleteAt           *int64    `json:"delete_at,omitempty"`
 
 	Teams *[]UserTeamImportData `json:"teams,omitempty"`
 
@@ -109,8 +110,9 @@ type UserChannelNotifyPropsImportData struct {
 }
 
 type EmojiImportData struct {
-	Name  *string `json:"name"`
-	Image *string `json:"image"`
+	Name  *string   `json:"name"`
+	Image *string   `json:"image"`
+	Data  *zip.File `json:"-"`
 }
 
 type ReactionImportData struct {
@@ -122,8 +124,10 @@ type ReactionImportData struct {
 type ReplyImportData struct {
 	User *string `json:"user"`
 
+	Type     *string `json:"type"`
 	Message  *string `json:"message"`
 	CreateAt *int64  `json:"create_at"`
+	EditAt   *int64  `json:"edit_at"`
 
 	FlaggedBy   *[]string               `json:"flagged_by,omitempty"`
 	Reactions   *[]ReactionImportData   `json:"reactions,omitempty"`
@@ -135,14 +139,17 @@ type PostImportData struct {
 	Channel *string `json:"channel"`
 	User    *string `json:"user"`
 
+	Type     *string                `json:"type"`
 	Message  *string                `json:"message"`
 	Props    *model.StringInterface `json:"props"`
 	CreateAt *int64                 `json:"create_at"`
+	EditAt   *int64                 `json:"edit_at"`
 
 	FlaggedBy   *[]string               `json:"flagged_by,omitempty"`
 	Reactions   *[]ReactionImportData   `json:"reactions,omitempty"`
 	Replies     *[]ReplyImportData      `json:"replies,omitempty"`
 	Attachments *[]AttachmentImportData `json:"attachments,omitempty"`
+	IsPinned    *bool                   `json:"is_pinned,omitempty"`
 }
 
 type DirectChannelImportData struct {
@@ -156,14 +163,17 @@ type DirectPostImportData struct {
 	ChannelMembers *[]string `json:"channel_members"`
 	User           *string   `json:"user"`
 
+	Type     *string                `json:"type"`
 	Message  *string                `json:"message"`
 	Props    *model.StringInterface `json:"props"`
 	CreateAt *int64                 `json:"create_at"`
+	EditAt   *int64                 `json:"edit_at"`
 
 	FlaggedBy   *[]string               `json:"flagged_by"`
 	Reactions   *[]ReactionImportData   `json:"reactions"`
 	Replies     *[]ReplyImportData      `json:"replies"`
 	Attachments *[]AttachmentImportData `json:"attachments"`
+	IsPinned    *bool                   `json:"is_pinned,omitempty"`
 }
 
 type SchemeImportData struct {

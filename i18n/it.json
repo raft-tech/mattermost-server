@@ -148,14 +148,6 @@
     "translation": "Questo canale è stato convertito in un Canale Privato."
   },
   {
-    "id": "api.channel.convert_channel_to_private.default_channel_error",
-    "translation": "Questo canale predefinito non può essere convertito in un canale privato."
-  },
-  {
-    "id": "api.channel.convert_channel_to_private.private_channel_error",
-    "translation": "Il canale da convertire è già un canale privato."
-  },
-  {
     "id": "api.channel.create_channel.direct_channel.app_error",
     "translation": "Bisogna usare il servizio createDirectChannel API per la creazione dei messaggi diretti nel canale."
   },
@@ -640,7 +632,7 @@
   },
   {
     "id": "api.command_invite.channel.error",
-    "translation": "Impossibile trovare il canale {{.Channel}}. Usare [channel handle](https://about.mattermost.com/default-channel-handle-documentation) per identificare i canali."
+    "translation": "Impossibile trovare il canale {{.Channel}}. Usare [channel handle](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) per identificare i canali."
   },
   {
     "id": "api.command_invite.desc",
@@ -784,7 +776,7 @@
   },
   {
     "id": "api.command_mute.error",
-    "translation": "Impossibile trovare il canale {{.Channel}}. Usare [channel handle](https://about.mattermost.com/default-channel-handle-documentation) per identificare i canali."
+    "translation": "Impossibile trovare il canale {{.Channel}}. Usare [channel handle](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) per identificare i canali."
   },
   {
     "id": "api.command_mute.hint",
@@ -796,7 +788,7 @@
   },
   {
     "id": "api.command_mute.no_channel.error",
-    "translation": "Impossibile trovare il canale specificato. Usare [channel handle](https://about.mattermost.com/default-channel-handle-documentation) per identificare i canali."
+    "translation": "Impossibile trovare il canale specificato. Usare [channel handle](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) per identificare i canali."
   },
   {
     "id": "api.command_mute.not_member.error",
@@ -1183,7 +1175,7 @@
   },
   {
     "id": "api.marshal_error",
-    "translation": "errore raccolta"
+    "translation": "Errore nella raccolta."
   },
   {
     "id": "api.oauth.allow_oauth.redirect_callback.app_error",
@@ -1318,16 +1310,8 @@
     "translation": "ChannelId non valido per il parametro RootId."
   },
   {
-    "id": "api.post.create_post.parent_id.app_error",
-    "translation": "Parametro ParentId non valido."
-  },
-  {
     "id": "api.post.create_post.root_id.app_error",
     "translation": "Parametro RooId non valido."
-  },
-  {
-    "id": "api.post.create_post.town_square_read_only",
-    "translation": "Il canale è in sola lettura. Solo i membri con i permessi corretti possono pubblicare qui."
   },
   {
     "id": "api.post.create_webhook_post.creating.app_error",
@@ -1386,10 +1370,6 @@
   {
     "id": "api.post.patch_post.can_not_update_post_in_deleted.error",
     "translation": "Impossibile aggiornare una pubblicazione in un canale eliminato."
-  },
-  {
-    "id": "api.post.save_is_pinned_post.town_square_read_only",
-    "translation": "Il canale è in sola lettura. Solo i membri con i permessi corretti possono bloccare o sbloccare le pubblicazioni in questo canale."
   },
   {
     "id": "api.post.send_notification_and_forget.push_channel_mention",
@@ -1470,10 +1450,6 @@
   {
     "id": "api.reaction.save_reaction.user_id.app_error",
     "translation": "Non puoi salvare le reazioni di un altro utente."
-  },
-  {
-    "id": "api.reaction.town_square_read_only",
-    "translation": "Non è possibile reagire alle pubblicazioni nei canali in sola lettura."
   },
   {
     "id": "api.restricted_system_admin",
@@ -1841,7 +1817,7 @@
   },
   {
     "id": "api.templates.invite_body.title",
-    "translation": "Sei stato invitato"
+    "translation": "{{ .SenderName }} ti ha invitato ad unirti alla squadra {{ .TeamDisplayName }}."
   },
   {
     "id": "api.templates.invite_subject",
@@ -2512,10 +2488,6 @@
     "translation": "Il campo display_name del canale non è nella gamma di lunghezze consentita."
   },
   {
-    "id": "app.import.validate_channel_import_data.display_name_missing.error",
-    "translation": "Manca la proprietà del canale richiesta: display_name"
-  },
-  {
     "id": "app.import.validate_channel_import_data.header_length.error",
     "translation": "L'intestazione del canale è troppo lunga."
   },
@@ -3018,10 +2990,6 @@
   {
     "id": "brand.save_brand_image.save_image.app_error",
     "translation": "Impossibile scrivere l'immagine nell'archivio file. Controllare la connessione e riprovare."
-  },
-  {
-    "id": "cli.license.critical",
-    "translation": "Questa opzione richiede una licenza Enterprise Edition valida. Per favore contatta il tuo Amministratore di Sistema."
   },
   {
     "id": "ent.account_migration.get_all_failed",
@@ -3568,10 +3536,6 @@
     "translation": "Nome utente non valido."
   },
   {
-    "id": "model.channel.is_valid.2_or_more.app_error",
-    "translation": "Nome deve essere 2 o più lettere minuscole alfanumeriche."
-  },
-  {
     "id": "model.channel.is_valid.create_at.app_error",
     "translation": "Creato alle deve essere un tempo valido."
   },
@@ -3720,10 +3684,6 @@
     "translation": "Id comando hook non valido."
   },
   {
-    "id": "model.command_hook.parent_id.app_error",
-    "translation": "Id genitore non valido."
-  },
-  {
     "id": "model.command_hook.root_id.app_error",
     "translation": "Id radice non valido."
   },
@@ -3790,10 +3750,6 @@
   {
     "id": "model.config.is_valid.elastic_search.aggregate_posts_after_days.app_error",
     "translation": "L'impostazione AggregatePostsAfterDays di Elasticsearch deve essere un numero maggiore o uguale a 1."
-  },
-  {
-    "id": "model.config.is_valid.elastic_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "La finestra temporale per il lavoro di indicizzazione massiva di Elasticsearch deve essere di almeno 1 secondo."
   },
   {
     "id": "model.config.is_valid.elastic_search.connection_url.app_error",
@@ -4408,20 +4364,12 @@
     "translation": "Id originale non valido."
   },
   {
-    "id": "model.post.is_valid.parent_id.app_error",
-    "translation": "Id genitore non valido."
-  },
-  {
     "id": "model.post.is_valid.props.app_error",
     "translation": "Proprietà invalide."
   },
   {
     "id": "model.post.is_valid.root_id.app_error",
     "translation": "Id radice non valido."
-  },
-  {
-    "id": "model.post.is_valid.root_parent.app_error",
-    "translation": "Non valido l'ID root deve essere specificato se l'ID padre è presente."
   },
   {
     "id": "model.post.is_valid.type.app_error",
@@ -4658,18 +4606,6 @@
   {
     "id": "plugin_api.send_mail.missing_to",
     "translation": "Manca l'indirizzo del destinatario."
-  },
-  {
-    "id": "store.sql.convert_string_array",
-    "translation": "FromDb: Impossibile convertire StringArray a *string"
-  },
-  {
-    "id": "store.sql.convert_string_interface",
-    "translation": "FromDb: Impossibile convertire StringInterface a *string"
-  },
-  {
-    "id": "store.sql.convert_string_map",
-    "translation": "FromDb: Impossibile convertire StringMap a *string"
   },
   {
     "id": "store.sql_bot.get.missing.app_error",
@@ -5192,14 +5128,6 @@
     "translation": "La creazione di bot è stata disabilitata."
   },
   {
-    "id": "api.bot.get_bot_icon_image.read.app_error",
-    "translation": "Impossibile leggere il file dell'icona."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.parse.app_error",
-    "translation": "Errore durante l'analisi del multipart-form."
-  },
-  {
     "id": "api.bot.teams_channels.add_message_mobile",
     "translation": "Per favore aggiungimi alle squadre e ai canali con cui vuoi che interagisca. Per farlo utilizza il browser oppure l'app desktop di Mattermost."
   },
@@ -5452,10 +5380,6 @@
     "translation": "La ricerca non è stata completata."
   },
   {
-    "id": "cli.outgoing_webhook.inconsistent_state.app_error",
-    "translation": "Il webhook in uscita è cancellato ma non è possibile crearne uno nuovo a causa di un errore."
-  },
-  {
     "id": "ent.compliance.csv.metadata.json.zipfile.appError",
     "translation": "Impossibile creare il file zip"
   },
@@ -5498,10 +5422,6 @@
   {
     "id": "model.command.is_valid.autocomplete_data.app_error",
     "translation": "Dati autocompletamento non validi"
-  },
-  {
-    "id": "model.config.is_valid.bleve_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "La finestra temporale per il lavoro di indicizzazione massiva di Bleve deve essere di almeno 1 secondo."
   },
   {
     "id": "model.config.is_valid.bleve_search.enable_searching.app_error",
@@ -5608,30 +5528,6 @@
     "translation": "Tipo contenuto non valido."
   },
   {
-    "id": "api.bot.delete_bot_icon_image.app_error",
-    "translation": "Impossibile eliminare l'icona."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.app_error",
-    "translation": "Impossibile caricare l'icona."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.array.app_error",
-    "translation": "Lista vuota per il campo 'image' nella richiesta."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.no_file.app_error",
-    "translation": "Nessun file nel campo 'immagine' nella richiesta."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.open.app_error",
-    "translation": "Impossibile aprire il file immagine."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.too_large.app_error",
-    "translation": "Impossibile caricare il file. Il file è troppo grande."
-  },
-  {
     "id": "api.channel.add_members.error",
     "translation": "Errore aggiungendo il membro al canale."
   },
@@ -5710,10 +5606,6 @@
   {
     "id": "api.ldap_groups.existing_user_name_error",
     "translation": "il nome di questo gruppo esiste già come nome utente"
-  },
-  {
-    "id": "api.plugin.add_public_key.open.app_error",
-    "translation": "Si è verificato un errore durante l'apertura del file di chiave pubblica."
   },
   {
     "id": "api.plugin.install.download_failed.app_error",
@@ -6352,14 +6244,6 @@
     "translation": "Scrivici"
   },
   {
-    "id": "api.server.warn_metric.contacting_us",
-    "translation": "Contattaci"
-  },
-  {
-    "id": "api.server.warn_metric.contact_us",
-    "translation": "Contattaci"
-  },
-  {
     "id": "api.server.warn_metric.bot_response.notification_success.message",
     "translation": "Grazie per aver contattato Mattermost. Ti daremo riscontro presto."
   },
@@ -6454,10 +6338,6 @@
   {
     "id": "app.preference.delete.app_error",
     "translation": "Errore riscontrato durante l'eliminazione delle preferenze."
-  },
-  {
-    "id": "app.system.warn_metric.notification.invalid_metric.app_error",
-    "translation": "Impossibile trovare la metrica di avviso."
   },
   {
     "id": "api.user.delete_user.not_enabled.app_error",
@@ -6606,14 +6486,6 @@
   {
     "id": "app.system.warn_metric.store.app_error",
     "translation": "Errore durante il salvataggio del valore di {{.WarnMetricName}}"
-  },
-  {
-    "id": "app.system.warn_metric.notification.empty_admin_list.app_error",
-    "translation": "La lista degli amministratori è vuota."
-  },
-  {
-    "id": "app.system.warn_metric.bot_description",
-    "translation": "[Per saperne di più sul consigliere di Mattermost](https://about.mattermost.com/default-channel-handle-documentation)"
   },
   {
     "id": "app.system.warn_metric.bot_displayname",
@@ -6804,14 +6676,6 @@
     "translation": "La funzione di eliminazione definitiva squadra non è attiva. Contattare l'Amministratore di Sistema."
   },
   {
-    "id": "api.server.warn_metric.starting_trial",
-    "translation": "Ottieni prova"
-  },
-  {
-    "id": "api.server.warn_metric.start_trial",
-    "translation": "Richiedi prova"
-  },
-  {
     "id": "api.server.warn_metric.number_of_active_users_500.contact_us.email_body",
     "translation": "Richiesta di contatto con Mattermost. La mia squadra adesso ha {{.Limit}} utenti e sto considerando l'edizione Enteprise di Mattermost.\n"
   },
@@ -6833,7 +6697,7 @@
   },
   {
     "id": "api.server.warn_metric.mfa.notification_title",
-    "translation": "Forza Autenticazione Multifattore:"
+    "translation": "Forza Autenticazione Multifattore"
   },
   {
     "id": "ent.elasticsearch.post.get_posts_batch_for_indexing.error",
@@ -6986,10 +6850,6 @@
   {
     "id": "app.channel.permanent_delete_members_by_user.app_error",
     "translation": "Impossibile eliminare il membro del canale"
-  },
-  {
-    "id": "app.channel.increment_mention_count.app_error",
-    "translation": "Impossibile incrementare il conteggio della citazione"
   },
   {
     "id": "app.channel.get_pinnedpost_count.app_error",
@@ -7206,5 +7066,37 @@
   {
     "id": "app.channel.clear_all_custom_role_assignments.select.app_error",
     "translation": "Impossibile recuperare i membri del canale"
+  },
+  {
+    "id": "api.cloud.license_error",
+    "translation": "La tua licenza non supporta le richieste di cloud."
+  },
+  {
+    "id": "api.cloud.cws_webhook_event_missing_error",
+    "translation": "L'evento webhook non è stato gestito. Manca oppure non è valido."
+  },
+  {
+    "id": "api.cloud.app_error",
+    "translation": "Errore interno durante la richiesta della cloud api."
+  },
+  {
+    "id": "api.channel.patch_channel_moderations.cache_invalidation.error",
+    "translation": "Errore nell'invalidazione della cache"
+  },
+  {
+    "id": "api.channel.create_channel.direct_channel.team_restricted_error",
+    "translation": "Un canale diretto non può essere creato tra questi utenti perché non condividono alcun team in comune."
+  },
+  {
+    "id": "api.back_to_app",
+    "translation": "Ritorna a {{.SiteName}}"
+  },
+  {
+    "id": "api.admin.saml.failure_reset_authdata_to_email.app_error",
+    "translation": "Impossibile azzerare il campo AuthData all'Email."
+  },
+  {
+    "id": "api.admin.ldap.not_available.app_error",
+    "translation": "LDAP non è disponibile."
   }
 ]

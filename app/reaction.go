@@ -4,12 +4,14 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/mattermost/mattermost-server/v6/app/request"
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/plugin"
+	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 )
 
 func (a *App) SaveReactionForPost(c *request.Context, reaction *model.Reaction) (*model.Reaction, *model.AppError) {
@@ -25,18 +27,6 @@ func (a *App) SaveReactionForPost(c *request.Context, reaction *model.Reaction) 
 
 	if channel.DeleteAt > 0 {
 		return nil, model.NewAppError("deleteReactionForPost", "api.reaction.save.archived_channel.app_error", nil, "", http.StatusForbidden)
-	}
-
-	if a.Srv().License() != nil && *a.Config().TeamSettings.ExperimentalTownSquareIsReadOnly && channel.Name == model.DefaultChannelName {
-		var user *model.User
-		user, err = a.GetUser(reaction.UserId)
-		if err != nil {
-			return nil, err
-		}
-
-		if !a.RolesGrantPermission(user.GetRoles(), model.PermissionManageSystem.Id) {
-			return nil, model.NewAppError("saveReactionForPost", "api.reaction.town_square_read_only", nil, "", http.StatusForbidden)
-		}
 	}
 
 	reaction, nErr := a.Srv().Store.Reaction().Save(reaction)
@@ -106,6 +96,30 @@ func populateEmptyReactions(postIDs []string, reactions map[string][]*model.Reac
 	return reactions
 }
 
+func (a *App) GetTopReactionsForTeamSince(teamID string, userID string, opts *model.InsightsOpts) (*model.TopReactionList, *model.AppError) {
+	if !a.Config().FeatureFlags.InsightsEnabled {
+		return nil, model.NewAppError("GetTopReactionsForTeamSince", "api.insights.feature_disabled", nil, "", http.StatusNotImplemented)
+	}
+
+	topReactionList, err := a.Srv().Store.Reaction().GetTopForTeamSince(teamID, userID, opts.StartUnixMilli, opts.Page*opts.PerPage, opts.PerPage)
+	if err != nil {
+		return nil, model.NewAppError("GetTopReactionsForTeamSince", "app.reaction.get_top_for_team_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return topReactionList, nil
+}
+
+func (a *App) GetTopReactionsForUserSince(userID string, teamID string, opts *model.InsightsOpts) (*model.TopReactionList, *model.AppError) {
+	if !a.Config().FeatureFlags.InsightsEnabled {
+		return nil, model.NewAppError("GetTopReactionsForUserSince", "api.insights.feature_disabled", nil, "", http.StatusNotImplemented)
+	}
+
+	topReactionList, err := a.Srv().Store.Reaction().GetTopForUserSince(userID, teamID, opts.StartUnixMilli, opts.Page*opts.PerPage, opts.PerPage)
+	if err != nil {
+		return nil, model.NewAppError("GetTopReactionsForUserSince", "app.reaction.get_top_for_user_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return topReactionList, nil
+}
+
 func (a *App) DeleteReactionForPost(c *request.Context, reaction *model.Reaction) *model.AppError {
 	post, err := a.GetSinglePost(reaction.PostId)
 	if err != nil {
@@ -119,17 +133,6 @@ func (a *App) DeleteReactionForPost(c *request.Context, reaction *model.Reaction
 
 	if channel.DeleteAt > 0 {
 		return model.NewAppError("DeleteReactionForPost", "api.reaction.delete.archived_channel.app_error", nil, "", http.StatusForbidden)
-	}
-
-	if a.Srv().License() != nil && *a.Config().TeamSettings.ExperimentalTownSquareIsReadOnly && channel.Name == model.DefaultChannelName {
-		user, err := a.GetUser(reaction.UserId)
-		if err != nil {
-			return err
-		}
-
-		if !a.RolesGrantPermission(user.GetRoles(), model.PermissionManageSystem.Id) {
-			return model.NewAppError("DeleteReactionForPost", "api.reaction.town_square_read_only", nil, "", http.StatusForbidden)
-		}
 	}
 
 	if _, err := a.Srv().Store.Reaction().Delete(reaction); err != nil {
@@ -159,6 +162,10 @@ func (a *App) DeleteReactionForPost(c *request.Context, reaction *model.Reaction
 func (a *App) sendReactionEvent(event string, reaction *model.Reaction, post *model.Post) {
 	// send out that a reaction has been added/removed
 	message := model.NewWebSocketEvent(event, "", post.ChannelId, "", nil)
-	message.Add("reaction", reaction.ToJson())
+	reactionJSON, jsonErr := json.Marshal(reaction)
+	if jsonErr != nil {
+		mlog.Warn("Failed to encode reaction to JSON")
+	}
+	message.Add("reaction", string(reactionJSON))
 	a.Publish(message)
 }

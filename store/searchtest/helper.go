@@ -60,19 +60,19 @@ func (th *SearchTestHelper) SetupBasicFixtures() error {
 	}
 
 	// Create channels
-	channelBasic, err := th.createChannel(team.Id, "channel-a", "ChannelA", "", model.ChannelTypeOpen, false)
+	channelBasic, err := th.createChannel(team.Id, "channel-a", "ChannelA", "", model.ChannelTypeOpen, nil, false)
 	if err != nil {
 		return err
 	}
-	channelPrivate, err := th.createChannel(team.Id, "channel-private", "ChannelPrivate", "", model.ChannelTypePrivate, false)
+	channelPrivate, err := th.createChannel(team.Id, "channel-private", "ChannelPrivate", "", model.ChannelTypePrivate, nil, false)
 	if err != nil {
 		return err
 	}
-	channelDeleted, err := th.createChannel(team.Id, "channel-deleted", "ChannelA (deleted)", "", model.ChannelTypeOpen, true)
+	channelDeleted, err := th.createChannel(team.Id, "channel-deleted", "ChannelA (deleted)", "", model.ChannelTypeOpen, nil, true)
 	if err != nil {
 		return err
 	}
-	channelAnotherTeam, err := th.createChannel(anotherTeam.Id, "channel-a", "ChannelA", "", model.ChannelTypeOpen, false)
+	channelAnotherTeam, err := th.createChannel(anotherTeam.Id, "channel-a", "ChannelA", "", model.ChannelTypeOpen, nil, false)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (th *SearchTestHelper) deleteBot(botID string) error {
 	return nil
 }
 
-func (th *SearchTestHelper) createChannel(teamID, name, displayName, purpose string, channelType model.ChannelType, deleted bool) (*model.Channel, error) {
+func (th *SearchTestHelper) createChannel(teamID, name, displayName, purpose string, channelType model.ChannelType, user *model.User, deleted bool) (*model.Channel, error) {
 	channel, err := th.Store.Channel().Save(&model.Channel{
 		TeamId:      teamID,
 		DisplayName: displayName,
@@ -249,6 +249,13 @@ func (th *SearchTestHelper) createChannel(teamID, name, displayName, purpose str
 	}, 999)
 	if err != nil {
 		return nil, err
+	}
+
+	if user != nil {
+		err = th.addUserToChannels(user, []string{channel.Id})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if deleted {
@@ -384,7 +391,6 @@ func (th *SearchTestHelper) createFileInfo(creatorID, postID, name, content, ext
 
 func (th *SearchTestHelper) createReply(userID, message, hashtags string, parent *model.Post, createAt int64, pinned bool) (*model.Post, error) {
 	replyModel := th.createPostModel(userID, parent.ChannelId, message, hashtags, parent.Type, createAt, pinned)
-	replyModel.ParentId = parent.Id
 	replyModel.RootId = parent.Id
 	return th.Store.Post().Save(replyModel)
 }
@@ -466,10 +472,19 @@ func (th *SearchTestHelper) checkFileInfoInSearchResults(t *testing.T, fileID st
 	assert.Contains(t, fileIDS, fileID, "Did not find expected file in search results.")
 }
 
-func (th *SearchTestHelper) checkChannelIdsMatch(t *testing.T, expected []string, results *model.ChannelList) {
+func (th *SearchTestHelper) checkChannelIdsMatch(t *testing.T, expected []string, results model.ChannelList) {
 	t.Helper()
-	channelIds := make([]string, len(*results))
-	for i, channel := range *results {
+	channelIds := make([]string, len(results))
+	for i, channel := range results {
+		channelIds[i] = channel.Id
+	}
+	require.ElementsMatch(t, expected, channelIds)
+}
+
+func (th *SearchTestHelper) checkChannelIdsMatchWithTeamData(t *testing.T, expected []string, results model.ChannelListWithTeamData) {
+	t.Helper()
+	channelIds := make([]string, len(results))
+	for i, channel := range results {
 		channelIds[i] = channel.Id
 	}
 	require.ElementsMatch(t, expected, channelIds)

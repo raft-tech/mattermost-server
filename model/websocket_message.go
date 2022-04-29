@@ -4,7 +4,6 @@
 package model
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -63,6 +62,8 @@ const (
 	WebsocketEventReceivedGroupNotAssociatedToTeam    = "received_group_not_associated_to_team"
 	WebsocketEventReceivedGroupAssociatedToChannel    = "received_group_associated_to_channel"
 	WebsocketEventReceivedGroupNotAssociatedToChannel = "received_group_not_associated_to_channel"
+	WebsocketEventGroupMemberDelete                   = "group_member_deleted"
+	WebsocketEventGroupMemberAdd                      = "group_member_add"
 	WebsocketEventSidebarCategoryCreated              = "sidebar_category_created"
 	WebsocketEventSidebarCategoryUpdated              = "sidebar_category_updated"
 	WebsocketEventSidebarCategoryDeleted              = "sidebar_category_deleted"
@@ -77,24 +78,74 @@ const (
 )
 
 type WebSocketMessage interface {
-	ToJson() []byte
+	ToJSON() ([]byte, error)
 	IsValid() bool
 	EventType() string
 }
 
 type WebsocketBroadcast struct {
-	OmitUsers             map[string]bool `json:"omit_users"` // broadcast is omitted for users listed here
-	UserId                string          `json:"user_id"`    // broadcast only occurs for this user
-	ChannelId             string          `json:"channel_id"` // broadcast only occurs for users in this channel
-	TeamId                string          `json:"team_id"`    // broadcast only occurs for users in this team
+	OmitUsers             map[string]bool `json:"omit_users"`    // broadcast is omitted for users listed here
+	UserId                string          `json:"user_id"`       // broadcast only occurs for this user
+	ChannelId             string          `json:"channel_id"`    // broadcast only occurs for users in this channel
+	TeamId                string          `json:"team_id"`       // broadcast only occurs for users in this team
+	ConnectionId          string          `json:"connection_id"` // broadcast only occurs for this connection
 	ContainsSanitizedData bool            `json:"-"`
 	ContainsSensitiveData bool            `json:"-"`
+	// ReliableClusterSend indicates whether or not the message should
+	// be sent through the cluster using the reliable, TCP backed channel.
+	ReliableClusterSend bool `json:"-"`
+}
+
+func (wb *WebsocketBroadcast) copy() *WebsocketBroadcast {
+	if wb == nil {
+		return nil
+	}
+
+	var c WebsocketBroadcast
+	if wb.OmitUsers != nil {
+		c.OmitUsers = make(map[string]bool, len(wb.OmitUsers))
+		for k, v := range wb.OmitUsers {
+			c.OmitUsers[k] = v
+		}
+	}
+	c.UserId = wb.UserId
+	c.ChannelId = wb.ChannelId
+	c.TeamId = wb.TeamId
+	c.ContainsSanitizedData = wb.ContainsSanitizedData
+	c.ContainsSensitiveData = wb.ContainsSensitiveData
+
+	return &c
 }
 
 type precomputedWebSocketEventJSON struct {
 	Event     json.RawMessage
 	Data      json.RawMessage
 	Broadcast json.RawMessage
+}
+
+func (p *precomputedWebSocketEventJSON) copy() *precomputedWebSocketEventJSON {
+	if p == nil {
+		return nil
+	}
+
+	var c precomputedWebSocketEventJSON
+
+	if p.Event != nil {
+		c.Event = make([]byte, len(p.Event))
+		copy(c.Event, p.Event)
+	}
+
+	if p.Data != nil {
+		c.Data = make([]byte, len(p.Data))
+		copy(c.Data, p.Data)
+	}
+
+	if p.Broadcast != nil {
+		c.Broadcast = make([]byte, len(p.Broadcast))
+		copy(c.Broadcast, p.Broadcast)
+	}
+
+	return &c
 }
 
 // webSocketEventJSON mirrors WebSocketEvent to make some of its unexported fields serializable
@@ -114,7 +165,7 @@ type WebSocketEvent struct {
 }
 
 // PrecomputeJSON precomputes and stores the serialized JSON for all fields other than Sequence.
-// This makes ToJson much more efficient when sending the same event to multiple connections.
+// This makes ToJSON much more efficient when sending the same event to multiple connections.
 func (ev *WebSocketEvent) PrecomputeJSON() *WebSocketEvent {
 	copy := ev.Copy()
 	event, _ := json.Marshal(copy.event)
@@ -151,6 +202,25 @@ func (ev *WebSocketEvent) Copy() *WebSocketEvent {
 		broadcast:       ev.broadcast,
 		sequence:        ev.sequence,
 		precomputedJSON: ev.precomputedJSON,
+	}
+	return copy
+}
+
+func (ev *WebSocketEvent) DeepCopy() *WebSocketEvent {
+	var dataCopy map[string]interface{}
+	if ev.data != nil {
+		dataCopy = make(map[string]interface{}, len(ev.data))
+		for k, v := range ev.data {
+			dataCopy[k] = v
+		}
+	}
+
+	copy := &WebSocketEvent{
+		event:           ev.event,
+		data:            dataCopy,
+		broadcast:       ev.broadcast.copy(),
+		sequence:        ev.sequence,
+		precomputedJSON: ev.precomputedJSON.copy(),
 	}
 	return copy
 }
@@ -199,17 +269,16 @@ func (ev *WebSocketEvent) EventType() string {
 	return ev.event
 }
 
-func (ev *WebSocketEvent) ToJson() []byte {
+func (ev *WebSocketEvent) ToJSON() ([]byte, error) {
 	if ev.precomputedJSON != nil {
-		return []byte(fmt.Sprintf(`{"event": %s, "data": %s, "broadcast": %s, "seq": %d}`, ev.precomputedJSON.Event, ev.precomputedJSON.Data, ev.precomputedJSON.Broadcast, ev.GetSequence()))
+		return []byte(fmt.Sprintf(`{"event": %s, "data": %s, "broadcast": %s, "seq": %d}`, ev.precomputedJSON.Event, ev.precomputedJSON.Data, ev.precomputedJSON.Broadcast, ev.GetSequence())), nil
 	}
-	b, _ := json.Marshal(webSocketEventJSON{
+	return json.Marshal(webSocketEventJSON{
 		ev.event,
 		ev.data,
 		ev.broadcast,
 		ev.sequence,
 	})
-	return b
 }
 
 // Encode encodes the event to the given encoder.
@@ -228,11 +297,11 @@ func (ev *WebSocketEvent) Encode(enc *json.Encoder) error {
 	})
 }
 
-func WebSocketEventFromJson(data io.Reader) *WebSocketEvent {
+func WebSocketEventFromJSON(data io.Reader) (*WebSocketEvent, error) {
 	var ev WebSocketEvent
 	var o webSocketEventJSON
 	if err := json.NewDecoder(data).Decode(&o); err != nil {
-		return nil
+		return nil, err
 	}
 	ev.event = o.Event
 	if u, ok := o.Data["user"]; ok {
@@ -240,14 +309,19 @@ func WebSocketEventFromJson(data io.Reader) *WebSocketEvent {
 		// because the user is in the form of a map[string]interface{}.
 		buf, err := json.Marshal(u)
 		if err != nil {
-			return nil
+			return nil, err
 		}
-		o.Data["user"] = UserFromJson(bytes.NewReader(buf))
+
+		var user User
+		if err = json.Unmarshal(buf, &user); err != nil {
+			return nil, err
+		}
+		o.Data["user"] = &user
 	}
 	ev.data = o.Data
 	ev.broadcast = o.Broadcast
 	ev.sequence = o.Sequence
-	return &ev
+	return &ev, nil
 }
 
 // WebSocketResponse represents a response received through the WebSocket
@@ -280,13 +354,11 @@ func (m *WebSocketResponse) EventType() string {
 	return WebsocketEventResponse
 }
 
-func (m *WebSocketResponse) ToJson() []byte {
-	b, _ := json.Marshal(m)
-	return b
+func (m *WebSocketResponse) ToJSON() ([]byte, error) {
+	return json.Marshal(m)
 }
 
-func WebSocketResponseFromJson(data io.Reader) *WebSocketResponse {
+func WebSocketResponseFromJSON(data io.Reader) (*WebSocketResponse, error) {
 	var o *WebSocketResponse
-	json.NewDecoder(data).Decode(&o)
-	return o
+	return o, json.NewDecoder(data).Decode(&o)
 }

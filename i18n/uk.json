@@ -148,14 +148,6 @@
     "translation": "Канал перетворений в приватний."
   },
   {
-    "id": "api.channel.convert_channel_to_private.default_channel_error",
-    "translation": "Цей стандартний канал не може бути конвертований в приватний."
-  },
-  {
-    "id": "api.channel.convert_channel_to_private.private_channel_error",
-    "translation": "Канал, що потрібно конвертувати, вже приватний."
-  },
-  {
     "id": "api.channel.create_channel.direct_channel.app_error",
     "translation": "Потрібно використовувати createDirectChannel з API для створення каналу особистих повідомлень"
   },
@@ -641,7 +633,7 @@
   },
   {
     "id": "api.command_invite.channel.error",
-    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://about.mattermost.com/default-channel-handle-documentation) для ідентифікаціі каналів."
+    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) для ідентифікаціі каналів."
   },
   {
     "id": "api.command_invite.desc",
@@ -785,7 +777,7 @@
   },
   {
     "id": "api.command_mute.error",
-    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://about.mattermost.com/default-channel-handle-documentation) для ідентифікаціі каналів. "
+    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) для ідентифікаціі каналів. "
   },
   {
     "id": "api.command_mute.hint",
@@ -797,7 +789,7 @@
   },
   {
     "id": "api.command_mute.no_channel.error",
-    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://about.mattermost.com/default-channel-handle-documentation) для ідентифікаціі каналів. "
+    "translation": "Не вдається знайти канал {{.Channel}}. Будь-ласка, скористайтесь [документацією](https://docs.mattermost.com/messaging/managing-channels.html#naming-a-channel) для ідентифікаціі каналів. "
   },
   {
     "id": "api.command_mute.not_member.error",
@@ -1320,16 +1312,8 @@
     "translation": "Недійсний параметр ChannelId для параметра RootId"
   },
   {
-    "id": "api.post.create_post.parent_id.app_error",
-    "translation": "Недійсний параметр ParentId"
-  },
-  {
     "id": "api.post.create_post.root_id.app_error",
     "translation": "Недійсний параметр RootId"
-  },
-  {
-    "id": "api.post.create_post.town_square_read_only",
-    "translation": "Цей канал доступний лише для читання. Тут можуть публікувати лише користувачі з дозволом."
   },
   {
     "id": "api.post.create_webhook_post.creating.app_error",
@@ -1390,10 +1374,6 @@
   {
     "id": "api.post.patch_post.can_not_update_post_in_deleted.error",
     "translation": "Can not update a post in a deleted channel."
-  },
-  {
-    "id": "api.post.save_is_pinned_post.town_square_read_only",
-    "translation": "Цей канал доступний лише для читання. Тут можуть публікувати лише користувачі з дозволом."
   },
   {
     "id": "api.post.send_notification_and_forget.push_channel_mention",
@@ -1474,10 +1454,6 @@
   {
     "id": "api.reaction.save_reaction.user_id.app_error",
     "translation": "Ви не можете зберегти реакцію для іншого користувача."
-  },
-  {
-    "id": "api.reaction.town_square_read_only",
-    "translation": "Реагування на повідомлення неможливе у каналах лише для читання."
   },
   {
     "id": "api.restricted_system_admin",
@@ -2516,10 +2492,6 @@
     "translation": "Ім'я дисплея каналу не в межах дозволених обмежень довжини."
   },
   {
-    "id": "app.import.validate_channel_import_data.display_name_missing.error",
-    "translation": "Відсутнє необхідне властивість каналу: display_name"
-  },
-  {
     "id": "app.import.validate_channel_import_data.header_length.error",
     "translation": "Заголовок каналу задовгий."
   },
@@ -3022,10 +2994,6 @@
   {
     "id": "brand.save_brand_image.save_image.app_error",
     "translation": "Не вдається записати файл зображення у файловий накопичувач. Перевірте ваше з'єднання та повторіть спробу."
-  },
-  {
-    "id": "cli.license.critical",
-    "translation": "Функція вимагає оновлення Enterprise Edition та включення ліцензійного ключа. Будь ласка, зв'яжіться зі своїм системним адміністратором."
   },
   {
     "id": "ent.account_migration.get_all_failed",
@@ -3572,10 +3540,6 @@
     "translation": "Невірне ім'я користувача."
   },
   {
-    "id": "model.channel.is_valid.2_or_more.app_error",
-    "translation": "Ім'я повинно складатися з 2 або більше малих літер і цифр"
-  },
-  {
     "id": "model.channel.is_valid.create_at.app_error",
     "translation": "\"Створити в\" повинно бути коректним часом"
   },
@@ -3724,10 +3688,6 @@
     "translation": "Недійсний ідентифікатор командного крюка"
   },
   {
-    "id": "model.command_hook.parent_id.app_error",
-    "translation": "Недійсний батьківський ідентифікатор"
-  },
-  {
     "id": "model.command_hook.root_id.app_error",
     "translation": "Недійсний ідентифікатор кореня"
   },
@@ -3794,10 +3754,6 @@
   {
     "id": "model.config.is_valid.elastic_search.aggregate_posts_after_days.app_error",
     "translation": "Параметр Elasticsearch AggregatePostsAfterDays повинен бути числом, більшим або рівним 1"
-  },
-  {
-    "id": "model.config.is_valid.elastic_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Вікно масове індексування часу служби Elasticsearch повинно бути не менше 1 секунди."
   },
   {
     "id": "model.config.is_valid.elastic_search.connection_url.app_error",
@@ -4412,20 +4368,12 @@
     "translation": "Некоректний оригінальний ідентифікатор"
   },
   {
-    "id": "model.post.is_valid.parent_id.app_error",
-    "translation": "Недійсний батьківський ідентифікатор"
-  },
-  {
     "id": "model.post.is_valid.props.app_error",
     "translation": "Неправильні властивості"
   },
   {
     "id": "model.post.is_valid.root_id.app_error",
     "translation": "Недійсний ідентифікатор кореня"
-  },
-  {
-    "id": "model.post.is_valid.root_parent.app_error",
-    "translation": "Необхідно встановити неправильний кореневий ідентифікатор, якщо встановлено батьківський"
   },
   {
     "id": "model.post.is_valid.type.app_error",
@@ -4662,18 +4610,6 @@
   {
     "id": "plugin_api.send_mail.missing_to",
     "translation": "Missing TO address."
-  },
-  {
-    "id": "store.sql.convert_string_array",
-    "translation": "FromDb: Неможливо перетворити StringArray в * string"
-  },
-  {
-    "id": "store.sql.convert_string_interface",
-    "translation": "FromDb: Неможливо перетворити StringInterface в * string"
-  },
-  {
-    "id": "store.sql.convert_string_map",
-    "translation": "FromDb: Неможливо перетворити StringMap в * string"
   },
   {
     "id": "store.sql_bot.get.missing.app_error",
@@ -5020,10 +4956,6 @@
     "translation": "Параметр Elastic Searching IndexingEnabled повинен бути встановлений як true, коли Elastic SearchEnabled встановлено як true."
   },
   {
-    "id": "model.config.is_valid.bleve_search.bulk_indexing_time_window_seconds.app_error",
-    "translation": "Вікно масове індексування часу служби Elasticsearch повинно бути не менше 1 секунди."
-  },
-  {
     "id": "model.command.is_valid.autocomplete_data.app_error",
     "translation": "Invalid AutocompleteData"
   },
@@ -5134,10 +5066,6 @@
   {
     "id": "ent.compliance.csv.metadata.json.zipfile.appError",
     "translation": "Неможливо створити файл eml."
-  },
-  {
-    "id": "cli.outgoing_webhook.inconsistent_state.app_error",
-    "translation": "The outgoing webhook is deleted but unable to create a new one due to some error."
   },
   {
     "id": "bleveengine.stop_user_index.error",
@@ -5752,10 +5680,6 @@
     "translation": "An error occurred while downloading the plugin."
   },
   {
-    "id": "api.plugin.add_public_key.open.app_error",
-    "translation": "Під час видалення додатка OAuth2 сталася помилка"
-  },
-  {
     "id": "api.license.remove_expired_license.failed.error",
     "translation": "Не вдалося успішно деактивувати електронну адресу облікового запису"
   },
@@ -5874,38 +5798,6 @@
   {
     "id": "api.bot.teams_channels.add_message_mobile",
     "translation": "Please add me to teams and channels you want me to interact in. To do this, use the browser or Mattermost Desktop App."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.too_large.app_error",
-    "translation": "Неможливо завантажити файл. Він занадто великий. "
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.parse.app_error",
-    "translation": "Неможливо обробити форму з декількох частин"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.open.app_error",
-    "translation": "Не вдається відкрити файл зображення"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.no_file.app_error",
-    "translation": "У запиті відсутній файл під атрибутом \"сертифікат\"."
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.array.app_error",
-    "translation": "Порожній масив 'image' в запиті"
-  },
-  {
-    "id": "api.bot.set_bot_icon_image.app_error",
-    "translation": "Не вдалося завантажити зображення профілю"
-  },
-  {
-    "id": "api.bot.get_bot_icon_image.read.app_error",
-    "translation": "Не вдається прочитати файл зображення піктограми."
-  },
-  {
-    "id": "api.bot.delete_bot_icon_image.app_error",
-    "translation": "Не вдалося завантажити зображення профілю"
   },
   {
     "id": "api.bot.create_disabled",
@@ -6584,10 +6476,6 @@
     "translation": "Не вдалося оновити заголовок прямого каналу"
   },
   {
-    "id": "api.server.warn_metric.start_trial",
-    "translation": "Request trial"
-  },
-  {
     "id": "api.server.warn_metric.mfa.notification_title",
     "translation": "Забезпечити багатофакторну автентифікацію:"
   },
@@ -6742,10 +6630,6 @@
   {
     "id": "app.channel.permanent_delete_members_by_user.app_error",
     "translation": "Не вдалося оновити заголовок прямого каналу"
-  },
-  {
-    "id": "app.channel.increment_mention_count.app_error",
-    "translation": "Не вдається збільшити кількість згадок"
   },
   {
     "id": "app.channel.get_pinnedpost_count.app_error",
@@ -6930,10 +6814,6 @@
   {
     "id": "api.license.request-trial.bad-request",
     "translation": "Кількість запитаних користувачів невірна."
-  },
-  {
-    "id": "api.templates.upgrade_mattermost_cloud",
-    "translation": "Оновити"
   },
   {
     "id": "api.server.warn_metric.number_of_active_users_500.notification_title",

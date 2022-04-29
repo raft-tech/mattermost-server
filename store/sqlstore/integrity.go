@@ -21,7 +21,7 @@ type relationalCheckConfig struct {
 }
 
 func getOrphanedRecords(ss *SqlStore, cfg relationalCheckConfig) ([]model.OrphanedRecord, error) {
-	var records []model.OrphanedRecord
+	records := []model.OrphanedRecord{}
 
 	sub := ss.getQueryBuilder().
 		Select("TRUE").
@@ -54,8 +54,7 @@ func getOrphanedRecords(ss *SqlStore, cfg relationalCheckConfig) ([]model.Orphan
 
 	query, args, _ := main.ToSql()
 
-	_, err := ss.GetMaster().Select(&records, query, args...)
-
+	err := ss.GetMasterX().Select(&records, query, args...)
 	return records, err
 }
 
@@ -147,16 +146,6 @@ func checkPostsFileInfoIntegrity(ss *SqlStore) model.IntegrityCheckResult {
 		parentIdAttr: "PostId",
 		childName:    "FileInfo",
 		childIdAttr:  "Id",
-	})
-}
-
-func checkPostsPostsParentIdIntegrity(ss *SqlStore) model.IntegrityCheckResult {
-	return checkParentChildIntegrity(ss, relationalCheckConfig{
-		parentName:         "Posts",
-		parentIdAttr:       "ParentId",
-		childName:          "Posts",
-		childIdAttr:        "Id",
-		canParentIdBeEmpty: true,
 	})
 }
 
@@ -474,7 +463,6 @@ func checkCommandsIntegrity(ss *SqlStore, results chan<- model.IntegrityCheckRes
 
 func checkPostsIntegrity(ss *SqlStore, results chan<- model.IntegrityCheckResult) {
 	results <- checkPostsFileInfoIntegrity(ss)
-	results <- checkPostsPostsParentIdIntegrity(ss)
 	results <- checkPostsPostsRootIdIntegrity(ss)
 	results <- checkPostsReactionsIntegrity(ss)
 }

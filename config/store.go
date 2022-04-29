@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -83,13 +84,13 @@ func NewStoreFromBacking(backingStore BackingStore, customDefaults *model.Config
 
 // NewStoreFromDSN creates and returns a new config store backed by either a database or file store
 // depending on the value of the given data source name string.
-func NewStoreFromDSN(dsn string, readOnly bool, customDefaults *model.Config) (*Store, error) {
+func NewStoreFromDSN(dsn string, readOnly bool, customDefaults *model.Config, createFileIfNotExist bool) (*Store, error) {
 	var err error
 	var backingStore BackingStore
 	if IsDatabaseDSN(dsn) {
 		backingStore, err = NewDatabaseStore(dsn)
 	} else {
-		backingStore, err = NewFileStore(dsn)
+		backingStore, err = NewFileStore(dsn, createFileIfNotExist)
 	}
 	if err != nil {
 		return nil, err
@@ -395,4 +396,17 @@ func (s *Store) IsReadOnly() bool {
 	s.configLock.RLock()
 	defer s.configLock.RUnlock()
 	return s.readOnly
+}
+
+// Cleanup removes outdated configurations from the database.
+// this is a no-op function for FileStore type backing store.
+func (s *Store) CleanUp() error {
+	switch bs := s.backingStore.(type) {
+	case *DatabaseStore:
+		dur := time.Duration(*s.config.JobSettings.CleanupConfigThresholdDays) * time.Hour * 24
+		expiry := model.GetMillisForTime(time.Now().Add(-dur))
+		return bs.cleanUp(int(expiry))
+	default:
+		return nil
+	}
 }

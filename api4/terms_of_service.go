@@ -14,8 +14,8 @@ import (
 )
 
 func (api *API) InitTermsOfService() {
-	api.BaseRoutes.TermsOfService.Handle("", api.ApiSessionRequired(getLatestTermsOfService)).Methods("GET")
-	api.BaseRoutes.TermsOfService.Handle("", api.ApiSessionRequired(createTermsOfService)).Methods("POST")
+	api.BaseRoutes.TermsOfService.Handle("", api.APISessionRequired(getLatestTermsOfService)).Methods("GET")
+	api.BaseRoutes.TermsOfService.Handle("", api.APISessionRequired(createTermsOfService)).Methods("POST")
 }
 
 func getLatestTermsOfService(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func createTermsOfService(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if license := c.App.Srv().License(); license == nil || !*license.Features.CustomTermsOfService {
+	if license := c.App.Channels().License(); license == nil || !*license.Features.CustomTermsOfService {
 		c.Err = model.NewAppError("createTermsOfService", "api.create_terms_of_service.custom_terms_of_service_disabled.app_error", nil, "", http.StatusBadRequest)
 		return
 	}
@@ -44,7 +44,7 @@ func createTermsOfService(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec := c.MakeAuditRecord("createTermsOfService", audit.Fail)
 	defer c.LogAuditRec(auditRec)
 
-	props := model.MapFromJson(r.Body)
+	props := model.MapFromJSON(r.Body)
 	text := props["text"]
 	userId := c.AppContext.Session().UserId
 

@@ -1,7 +1,8 @@
-// +build !race
-
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
+
+//go:build !race
+// +build !race
 
 package api4
 
@@ -21,15 +22,15 @@ func TestWebSocket(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	WebSocketClient, err := th.CreateWebSocketClient()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer WebSocketClient.Close()
 
 	time.Sleep(300 * time.Millisecond)
 
 	// Test closing and reconnecting
 	WebSocketClient.Close()
-	err = WebSocketClient.Connect()
-	require.Nil(t, err)
+	appErr := WebSocketClient.Connect()
+	require.Nil(t, appErr)
 
 	WebSocketClient.Listen()
 
